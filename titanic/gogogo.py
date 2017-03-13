@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from collections import Counter  
-
+from math import isnan
 #Print you can execute arbitrary python code
 train = pd.read_csv("./train.csv", dtype={"Age": np.float64}, )
 # test = pd.read_csv("./test.csv", dtype={"Age": np.float64}, )
@@ -27,13 +27,15 @@ def statistic(data, survived_col=1, to_judge_col=2):  # nice function to learn a
     counter = Counter()
     total = Counter()
     for i in data:
+        if isinstance(i[to_judge_col], float) and isnan(i[to_judge_col]):
+            continue
         total[i[to_judge_col]] += 1
         if i[survived_col]==1:
             counter[i[to_judge_col]] += 1
-    print 'Survived percent of column {}:'.format(TRAIN_HEADER[to_judge_col]) 
+    print 'Survived distribution of column {}:'.format(TRAIN_HEADER[to_judge_col]) 
     for i in counter:
         print '{}: {}----{} of {}'.format(i, 1.0*counter[i]/total[i], counter[i], total[i])
 
-statistic(data, to_judge_col=4)
+statistic(data, to_judge_col=2)
 
 # data = np.genfromtxt('train.csv')
