@@ -36,6 +36,4 @@ def statistic(data, survived_col=1, to_judge_col=2):  # nice function to learn a
     for i in counter:
         print '{}: {}----{} of {}'.format(i, 1.0*counter[i]/total[i], counter[i], total[i])
 
-statistic(data, to_judge_col=2)
-
-# data = np.genfromtxt('train.csv')
+# statistic(data, to_judge_col=-1)

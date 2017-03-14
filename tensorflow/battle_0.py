@@ -68,6 +68,8 @@ def training(step, train_times):
     batch_xs = images
     batch_ys = labels
     print sess.run(accuracy, feed_dict={x: batch_xs, y_: batch_ys})
+    file_writer = tf.summary.FileWriter('/Users/johnson/kagglereop', sess.graph)
+
     return
     # out put the data in below part
     data = pd.read_csv('../test.csv')
@@ -79,10 +81,11 @@ def training(step, train_times):
         res[index] = np.argmax(raw_res[index])
 
     np.savetxt('output.csv', res, fmt='%d', delimiter=',', header="Label")
+    print 'writting'
 
 def main():
     get_train_data('../train.csv')
-    training(step=0.01, train_times=1000)
+    training(step=0.01, train_times=100)
 
 if __name__ == '__main__':
     main()
