@@ -26,7 +26,14 @@ test_df    = test_df.drop(['Name','Ticket'], axis=1)
 # only in titanic_df, fill the two missing values with the most occurred value, which is "S".
 titanic_df["Embarked"] = titanic_df["Embarked"].fillna("S")
 
-# plot
-sns.factorplot('Pclass','Survived', data=titanic_df,size=4,aspect=3)
-sns.plt.show()  # 我靠，上面这个好方便！！！昨天自己写的那个统计的是多余的啊，这个直接可视化了！！
-# if not use "%matplotlib inline", should use sns.plt.show() !!!!
+sns.factorplot('Embarked','Survived', data=titanic_df,size=4,aspect=3)
+
+fig1, (axis1, axis2, axis3) = plt.subplots(1,3,figsize=(15,5))
+sns.countplot(x='Embarked', data=titanic_df, ax=axis1)
+
+sns.countplot(x='Survived', hue="Embarked", data=titanic_df, order=[1,0]) # hue 代表了各组数据下的embarked情况
+sns.countplot(x='Survived', hue="Sex", data=titanic_df, order=[1,0], ax=axis3)
+
+# 我靠，上面这个好方便！！！昨天自己写的那个统计的是多余的啊，这个直接可视化了！！
+sns.plt.show()  
+# if not use "%matplotlib inline", should use sns.plt.show() instead!!!!
