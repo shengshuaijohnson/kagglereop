@@ -5,6 +5,7 @@ import time
 start = time.time()
 import pandas as pd
 from pandas import Series,DataFrame
+pd.options.mode.chained_assignment = None  # default='warn'   from http://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -115,14 +116,14 @@ avgerage_fare.index.names = std_fare.index.names = ["Survived"]
 # avgerage_fare.plot(yerr=std_fare,kind='bar',legend=False)
 
 #Ageeeeeeeee
-fig, (axis1,axis2) = plt.subplots(1,2,figsize=(15,4))
-axis1.set_title('Original Age values - Titanic')
-axis2.set_title('New Age values - Titanic')
+# fig, (axis1,axis2) = plt.subplots(1,2,figsize=(15,4))
+# axis1.set_title('Original Age values - Titanic')
+# axis2.set_title('New Age values - Titanic')
 
 average_age_titanic   = titanic_df["Age"].mean()
 std_age_titanic       = titanic_df["Age"].std()
 count_nan_age_titanic = titanic_df["Age"].isnull().sum()
-print  count_nan_age_titanic
+
 
 average_age_test   = test_df["Age"].mean()
 std_age_test       = test_df["Age"].std()
@@ -134,8 +135,29 @@ count_nan_age_test = test_df["Age"].isnull().sum()
 rand_1 = np.random.randint(average_age_titanic - std_age_titanic, average_age_titanic + std_age_titanic, size = count_nan_age_titanic)
 rand_2 = np.random.randint(average_age_test - std_age_test, average_age_test + std_age_test, size = count_nan_age_test)
 
-titanic_df['Age'].dropna().astype(int).hist(bins=70, ax=axis1)# 也可以用plot，参数里设置kind=hist
+
+# titanic_df['Age'].dropna().astype(int).hist(bins=70, ax=axis1)# 也可以用plot()，参数里设置kind=hist
+# 上面一条和下面一条相比可知dropna没有改变df本身数据
+
+titanic_df["Age"][np.isnan(titanic_df["Age"])] = rand_1  # 奇葩语法。。。
+test_df["Age"][np.isnan(test_df["Age"])] = rand_2
+
+titanic_df['Age'] = titanic_df['Age'].astype(int)
+test_df['Age'] = test_df['Age'].astype(int)
+# titanic_df['Age'].hist(bins=70, ax=axis2)
 
 
+facet = sns.FacetGrid(titanic_df, hue="Survived",aspect=4) # 类介绍：Subplot grid for plotting conditional relationships.
+facet.map(sns.kdeplot,'Age',shade= True) # sns.kdeplot：支持单变量or双变量的密度估计绘图，图片离散化    map用法没详细看，应该比较广泛
+
+# 无限画图我日!
+facet.set(xlim=(0, titanic_df['Age'].max())) # 限制x坐标
+facet.add_legend()  # 加图例
+fig, axis1 = plt.subplots(1,1,figsize=(18,4))
+average_age = titanic_df[["Age", "Survived"]].groupby(['Age'],as_index=False).mean()  # 每个年纪的人的生存率/平均生还几率
+sns.barplot(x='Age', y='Survived', data=average_age)
+
+titanic_df.drop("Cabin",axis=1,inplace=True)  # 直接舍弃
+test_df.drop("Cabin",axis=1,inplace=True)
 
 sns.plt.show()
