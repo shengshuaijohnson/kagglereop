@@ -97,6 +97,8 @@ test_df["Fare"].fillna(test_df["Fare"].median(), inplace=True)
 titanic_df['Fare'] = titanic_df['Fare'].astype(int)
 test_df['Fare']    = test_df['Fare'].astype(int)
 
+data_survived = titanic_df.loc[titanic_df["Survived"]==0]
+
 fare_not_survived = titanic_df["Fare"][titanic_df["Survived"] == 0] 
 # actually titanic_df[titanic_df["Survived"] == 0]["Fare"] 也可以
 fare_survived     = titanic_df["Fare"][titanic_df["Survived"] == 1]
@@ -147,17 +149,73 @@ test_df['Age'] = test_df['Age'].astype(int)
 # titanic_df['Age'].hist(bins=70, ax=axis2)
 
 
-facet = sns.FacetGrid(titanic_df, hue="Survived",aspect=4) # 类介绍：Subplot grid for plotting conditional relationships.
-facet.map(sns.kdeplot,'Age',shade= True) # sns.kdeplot：支持单变量or双变量的密度估计绘图，图片离散化    map用法没详细看，应该比较广泛
+# facet = sns.FacetGrid(titanic_df, hue="Survived",aspect=4) # 类介绍：Subplot grid for plotting conditional relationships.
+# facet.map(sns.kdeplot,'Age',shade= True) # sns.kdeplot：支持单变量or双变量的密度估计绘图，图片离散化    map用法没详细看，应该比较广泛
 
 # 无限画图我日!
-facet.set(xlim=(0, titanic_df['Age'].max())) # 限制x坐标
-facet.add_legend()  # 加图例
-fig, axis1 = plt.subplots(1,1,figsize=(18,4))
-average_age = titanic_df[["Age", "Survived"]].groupby(['Age'],as_index=False).mean()  # 每个年纪的人的生存率/平均生还几率
-sns.barplot(x='Age', y='Survived', data=average_age)
+# facet.set(xlim=(0, titanic_df['Age'].max())) # 限制x坐标
+# facet.add_legend()  # 加图例
+# fig, axis1 = plt.subplots(1,1,figsize=(18,4))
+average_age = titanic_df[["Age", "Survived"]].groupby(['Age'],as_index=False) # 每个年纪的人的生存率/平均生还几率
+# sns.barplot(x='Age', y='Survived', data=average_age)
 
 titanic_df.drop("Cabin",axis=1,inplace=True)  # 直接舍弃
 test_df.drop("Cabin",axis=1,inplace=True)
 
+# Family
+
+titanic_df['Family'] =  titanic_df["Parch"] + titanic_df["SibSp"]
+titanic_df['Family'].loc[titanic_df['Family'] > 0] = 1  # loc好像不必要？还是说会出现copy的问题= =  其实不用这个归一化还可以发现三个亲戚的生存率最高
+# titanic_df['Family'].loc[titanic_df['Family'] == 0] = 0 这一条感觉完全不需要，自己注了
+
+titanic_df = titanic_df.drop(['SibSp','Parch'], axis=1)  # axis?
+test_df    = test_df.drop(['SibSp','Parch'], axis=1)
+
+# fig, (axis1,axis2) = plt.subplots(1,2,sharex=True,figsize=(10,5))
+# sns.countplot(x='Family', data=titanic_df, order=[1,0], ax=axis1)
+
+family_perc = titanic_df[["Family", "Survived"]].groupby(['Family'],as_index=False).mean() # 注意groupby以及切片的用法，还不太熟悉= =
+# sns.barplot(x='Family', y='Survived', data=family_perc, order=[1,0], ax=axis2)
+
+
+
+
+def get_person(passenger):
+    age,sex = passenger
+    return 'child' if age < 16 else sex
+
+
+
+
+
+
+
+def get_person(passenger):
+    age,sex = passenger
+    return 'child' if age < 16 else sex
+
+
+titanic_df['Person'] = titanic_df[['Age','Sex']].apply(get_person,axis=1)  # ATTENTION!!!这里的用法！；另外，这里表示取age和sex两列的数据
+# axis : 0表示按列，1表示按行  （这就是之前德神说的那个批量转换，很好用！）
+
+test_df['Person']    = test_df[['Age','Sex']].apply(get_person,axis=1)
+
+titanic_df.drop(['Sex'],axis=1,inplace=True)
+test_df.drop(['Sex'],axis=1,inplace=True)
+
+person_dummies_titanic  = pd.get_dummies(titanic_df['Person'])
+person_dummies_titanic.columns = ['Child','Female','Male']
+person_dummies_titanic.drop(['Male'], axis=1, inplace=True)
+# print person_dummies_titanic
+
+person_dummies_test  = pd.get_dummies(test_df['Person'])
+person_dummies_test.columns = ['Child','Female','Male']
+person_dummies_test.drop(['Male'], axis=1, inplace=True)
+
+
+
+
+
+# x =  titanic_df[['Age','Sex']]
+# print help(x.apply)
 sns.plt.show()
