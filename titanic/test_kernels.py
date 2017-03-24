@@ -23,15 +23,15 @@ from sklearn.naive_bayes import GaussianNB                  # 朴素贝叶斯 im
 # print time.time() - start         土制测速方法，在大程序里狂复制这条快速发现时间开销，大量时间花费在sns加载（？）上
 
 
-titanic_df = pd.read_csv("train.csv")
-test_df    = pd.read_csv("test.csv")
+titanic_df = pd.read_csv('train.csv')
+test_df    = pd.read_csv('test.csv')
 
 # print titanic_df.head()
 titanic_df = titanic_df.drop(['PassengerId','Name','Ticket'], axis=1)       # 其实不是很必要，drop了舒服一点（or节约内存？）
 test_df    = test_df.drop(['Name','Ticket'], axis=1)
 
-# only in titanic_df, fill the two missing values with the most occurred value, which is "S".
-titanic_df["Embarked"] = titanic_df["Embarked"].fillna("S")
+# only in titanic_df, fill the two missing values with the most occurred value, which is 'S'.
+titanic_df['Embarked'] = titanic_df['Embarked'].fillna('S')
 
 # sns.factorplot('Embarked','Survived', data=titanic_df,size=4,aspect=3)
 
@@ -40,14 +40,14 @@ titanic_df["Embarked"] = titanic_df["Embarked"].fillna("S")
 
 
 # sns.countplot(x='Embarked', data=titanic_df, ax=axis1)
-# sns.countplot(x='Survived', hue="Embarked", data=titanic_df, order=[1,0], ax=axis2) # hue 代表相同x情况下以此再进行柱状图的分隔
-# sns.countplot(x='Survived', hue="Sex", data=titanic_df, order=[1,0], ax=axis2) # hue 代表相同x情况下以此再进行柱状图的分隔
+# sns.countplot(x='Survived', hue='Embarked', data=titanic_df, order=[1,0], ax=axis2) # hue 代表相同x情况下以此再进行柱状图的分隔
+# sns.countplot(x='Survived', hue='Sex', data=titanic_df, order=[1,0], ax=axis2) # hue 代表相同x情况下以此再进行柱状图的分隔
 
 # 我靠，上面这个好方便！！！昨天自己写的那个统计的是多余的啊，这个直接可视化了！！
 
 
 # group by embarked, and get the mean for survived passengers for each value in Embarked
-embark_perc = titanic_df[["Embarked", "Survived"]].groupby(['Embarked'],as_index=False).mean()  # 分组取平均，我佛，可以注意一下数据取mean前typye  pandas.core.groupby.DataFrameGroupBy 
+embark_perc = titanic_df[['Embarked', 'Survived']].groupby(['Embarked'],as_index=False).mean()  # 分组取平均，我佛，可以注意一下数据取mean前typye  pandas.core.groupby.DataFrameGroupBy 
 
 # sns.barplot(x='Embarked', y='Survived', data=titanic_df, order=['S','C','Q'],ax=axis3)         # 
 
@@ -68,7 +68,6 @@ test_df    = test_df.join(embark_dummies_test)
 titanic_df.drop(['Embarked'], axis=1,inplace=True)     # attention!  print help(titanic_df.drop) 后发现 inplace = 1和 0 的区别类似于 sorted 和sort的区别
 test_df.drop(['Embarked'], axis=1,inplace=True)
 # print 'ggg'
-# print test_df
 
 
 # MD，用了一大堆代码清理数据和做展示，下面还有好多，跳到最后面真正进行计算的代码少的一批
@@ -82,26 +81,26 @@ test_df.drop(['Embarked'], axis=1,inplace=True)
 
 
 
-# X_train = titanic_df.drop("Survived",axis=1,inplace=True)
-# # Y_train = titanic_df["Survived"]
-# X_test  = test_df.drop("PassengerId",axis=1).copy()     # 这附近对test train数据处理的手法要注意，以前老是两张csv处理起来一头包
+# X_train = titanic_df.drop('Survived',axis=1,inplace=True)
+# # Y_train = titanic_df['Survived']
+# X_test  = test_df.drop('PassengerId',axis=1).copy()     # 这附近对test train数据处理的手法要注意，以前老是两张csv处理起来一头包
 
 # logreg = LogisticRegression()               # 很基础的逻辑回归，明天再康
 
-# # if not use "%matplotlib inline", should use sns.plt.show() instead!!!!
+# # if not use '%matplotlib inline', should use sns.plt.show() instead!!!!
 
 
 
-test_df["Fare"].fillna(test_df["Fare"].median(), inplace=True)
+test_df['Fare'].fillna(test_df['Fare'].median(), inplace=True)
 
 titanic_df['Fare'] = titanic_df['Fare'].astype(int)
 test_df['Fare']    = test_df['Fare'].astype(int)
 
-data_survived = titanic_df.loc[titanic_df["Survived"]==0]
+data_survived = titanic_df.loc[titanic_df['Survived']==0]
 
-fare_not_survived = titanic_df["Fare"][titanic_df["Survived"] == 0] 
-# actually titanic_df[titanic_df["Survived"] == 0]["Fare"] 也可以
-fare_survived     = titanic_df["Fare"][titanic_df["Survived"] == 1]
+fare_not_survived = titanic_df['Fare'][titanic_df['Survived'] == 0] 
+# actually titanic_df[titanic_df['Survived'] == 0]['Fare'] 也可以
+fare_survived     = titanic_df['Fare'][titanic_df['Survived'] == 1]
 
 
 avgerage_fare = DataFrame([fare_not_survived.mean(), fare_survived.mean()]) # 注意顺序，直接把not放前面，就是第0个，此后index.name再改成survived则可表示是否生还
@@ -114,7 +113,7 @@ std_fare      = DataFrame([fare_not_survived.std(), fare_survived.std()])   # �
 
 
 
-avgerage_fare.index.names = std_fare.index.names = ["Survived"]
+avgerage_fare.index.names = std_fare.index.names = ['Survived']
 # avgerage_fare.plot(yerr=std_fare,kind='bar',legend=False)
 
 #Ageeeeeeeee
@@ -122,14 +121,14 @@ avgerage_fare.index.names = std_fare.index.names = ["Survived"]
 # axis1.set_title('Original Age values - Titanic')
 # axis2.set_title('New Age values - Titanic')
 
-average_age_titanic   = titanic_df["Age"].mean()
-std_age_titanic       = titanic_df["Age"].std()
-count_nan_age_titanic = titanic_df["Age"].isnull().sum()
+average_age_titanic   = titanic_df['Age'].mean()
+std_age_titanic       = titanic_df['Age'].std()
+count_nan_age_titanic = titanic_df['Age'].isnull().sum()
 
 
-average_age_test   = test_df["Age"].mean()
-std_age_test       = test_df["Age"].std()
-count_nan_age_test = test_df["Age"].isnull().sum()
+average_age_test   = test_df['Age'].mean()
+std_age_test       = test_df['Age'].std()
+count_nan_age_test = test_df['Age'].isnull().sum()
 
 
 # generate random numbers between (mean - std) & (mean + std)
@@ -141,32 +140,37 @@ rand_2 = np.random.randint(average_age_test - std_age_test, average_age_test + s
 # titanic_df['Age'].dropna().astype(int).hist(bins=70, ax=axis1)# 也可以用plot()，参数里设置kind=hist
 # 上面一条和下面一条相比可知dropna没有改变df本身数据
 
-titanic_df["Age"][np.isnan(titanic_df["Age"])] = rand_1  # 奇葩语法。。。
-test_df["Age"][np.isnan(test_df["Age"])] = rand_2
+titanic_df['Age'][np.isnan(titanic_df['Age'])] = rand_1  # 奇葩语法。。。
+test_df['Age'][np.isnan(test_df['Age'])] = rand_2
 
 titanic_df['Age'] = titanic_df['Age'].astype(int)
 test_df['Age'] = test_df['Age'].astype(int)
 # titanic_df['Age'].hist(bins=70, ax=axis2)
 
 
-# facet = sns.FacetGrid(titanic_df, hue="Survived",aspect=4) # 类介绍：Subplot grid for plotting conditional relationships.
+# facet = sns.FacetGrid(titanic_df, hue='Survived',aspect=4) # 类介绍：Subplot grid for plotting conditional relationships.
 # facet.map(sns.kdeplot,'Age',shade= True) # sns.kdeplot：支持单变量or双变量的密度估计绘图，图片离散化    map用法没详细看，应该比较广泛
 
 # 无限画图我日!
 # facet.set(xlim=(0, titanic_df['Age'].max())) # 限制x坐标
 # facet.add_legend()  # 加图例
 # fig, axis1 = plt.subplots(1,1,figsize=(18,4))
-average_age = titanic_df[["Age", "Survived"]].groupby(['Age'],as_index=False) # 每个年纪的人的生存率/平均生还几率
+average_age = titanic_df[['Age', 'Survived']].groupby(['Age'],as_index=False) # 每个年纪的人的生存率/平均生还几率
 # sns.barplot(x='Age', y='Survived', data=average_age)
 
-titanic_df.drop("Cabin",axis=1,inplace=True)  # 直接舍弃
-test_df.drop("Cabin",axis=1,inplace=True)
+titanic_df.drop('Cabin',axis=1,inplace=True)  # 直接舍弃
+test_df.drop('Cabin',axis=1,inplace=True)
 
 # Family
 
-titanic_df['Family'] =  titanic_df["Parch"] + titanic_df["SibSp"]
+titanic_df['Family'] =  titanic_df['Parch'] + titanic_df['SibSp']
 titanic_df['Family'].loc[titanic_df['Family'] > 0] = 1  # loc好像不必要？还是说会出现copy的问题= =  其实不用这个归一化还可以发现三个亲戚的生存率最高
-# titanic_df['Family'].loc[titanic_df['Family'] == 0] = 0 这一条感觉完全不需要，自己注了
+# titanic_df['Family'].loc[titanic_df['Family'] == 0] = 0  #这一条感觉完全不需要，自己注了
+
+test_df['Family'] =  test_df["Parch"] + test_df["SibSp"]
+test_df['Family'].loc[test_df['Family'] > 0] = 1
+# test_df['Family'].loc[test_df['Family'] == 0] = 0
+
 
 titanic_df = titanic_df.drop(['SibSp','Parch'], axis=1)  # axis?
 test_df    = test_df.drop(['SibSp','Parch'], axis=1)
@@ -174,17 +178,8 @@ test_df    = test_df.drop(['SibSp','Parch'], axis=1)
 # fig, (axis1,axis2) = plt.subplots(1,2,sharex=True,figsize=(10,5))
 # sns.countplot(x='Family', data=titanic_df, order=[1,0], ax=axis1)
 
-family_perc = titanic_df[["Family", "Survived"]].groupby(['Family'],as_index=False).mean() # 注意groupby以及切片的用法，还不太熟悉= =
+family_perc = titanic_df[['Family', 'Survived']].groupby(['Family'],as_index=False).mean() # 注意groupby以及切片的用法，还不太熟悉= =
 # sns.barplot(x='Family', y='Survived', data=family_perc, order=[1,0], ax=axis2)
-
-
-
-
-def get_person(passenger):
-    age,sex = passenger
-    return 'child' if age < 16 else sex
-
-
 
 
 
@@ -212,10 +207,61 @@ person_dummies_test  = pd.get_dummies(test_df['Person'])
 person_dummies_test.columns = ['Child','Female','Male']
 person_dummies_test.drop(['Male'], axis=1, inplace=True)
 
+titanic_df = titanic_df.join(person_dummies_titanic)
+test_df    = test_df.join(person_dummies_test)
+
+
+# fig, (axis1,axis2) = plt.subplots(1,2,figsize=(10,5))
+# sns.countplot(x='Person',data=titanic_df, ax=axis1)
+
+person_perc = titanic_df[['Person', 'Survived']].groupby(['Person'],as_index=False).mean()
+# sns.barplot(x='Person', y='Survived', data=person_perc, ax=axis2, order=['male','female','child'])
+
+titanic_df.drop(['Person'],axis=1,inplace=True)
+test_df.drop(['Person'],axis=1,inplace=True)
+
+# Pclass    last one!!
+# fig, (axis1) = plt.subplots(1,1,figsize=(10,5))
+# sns.countplot(x='Pclass',hue='Survived', data=titanic_df,ax=axis1)
+# sns.factorplot('Pclass','Survived',order=[1,2,3], data=titanic_df,size=5)
+
+pclass_dummies = pd.get_dummies(titanic_df['Pclass'])
+pclass_dummies.columns = ['Class1', 'Class2', 'Class3']
+pclass_dummies.drop(['Class3'], axis=1, inplace=True)
+
+pclass_dummies_test  = pd.get_dummies(test_df['Pclass'])
+pclass_dummies_test.columns = ['Class_1','Class_2','Class_3']
+pclass_dummies_test.drop(['Class_3'], axis=1, inplace=True)
+
+
+titanic_df.drop(['Pclass'],axis=1,inplace=True)
+test_df.drop(['Pclass'],axis=1,inplace=True)
+
+titanic_df = titanic_df.join(pclass_dummies)
+test_df    = test_df.join(pclass_dummies_test)
 
 
 
 
-# x =  titanic_df[['Age','Sex']]
-# print help(x.apply)
-sns.plt.show()
+#gogogo!
+X_train = titanic_df.drop('Survived', axis=1)  # axis参数表示去掉这一列
+Y_train = titanic_df['Survived']
+X_test  = test_df.drop('PassengerId',axis=1).copy()
+
+# Logistic Regression
+
+logreg = LogisticRegression() 
+
+logreg.fit(X_train, Y_train) # 直接进行逻辑回归训练,MD好简单啊，都不需要设置额外的参数
+print help(logreg.fit)
+Y_pred = logreg.predict(X_test)
+
+# print logreg.score(X_train, Y_train)
+
+# result = DataFrame(logreg.coef_)   下面这三行可以较直观地查看参数（其实主要只有这一行，coef_ =coefficient）
+# result.columns = X_test.columns
+# print result
+
+
+
+
