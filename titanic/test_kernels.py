@@ -252,16 +252,69 @@ X_test  = test_df.drop('PassengerId',axis=1).copy()
 
 logreg = LogisticRegression() 
 
+
 logreg.fit(X_train, Y_train) # 直接进行逻辑回归训练,MD好简单啊，都不需要设置额外的参数
-print help(logreg.fit)
+
 Y_pred = logreg.predict(X_test)
+# logreg.coef_[0][1] = -0.000729601615961 手动改变参数
+# print logreg.score(X_train, Y_train)   # 0.811447811448
 
-# print logreg.score(X_train, Y_train)
-
-# result = DataFrame(logreg.coef_)   下面这三行可以较直观地查看参数（其实主要只有这一行，coef_ =coefficient）
+# result = DataFrame(logreg.coef_)   # 下面这三行可以较直观地查看参数（其实主要只有这一行，coef_ =coefficient） 注意 coef_ is only available when using a linear kernel
 # result.columns = X_test.columns
 # print result
+# 晕，最下面其实有更标准的方法了 = =这几个是自己写的。。 但感觉其实没什么大区别
 
 
+# Support Vector Machines
+svc = SVC()
+svc.fit(X_train, Y_train)
+Y_pred = svc.predict(X_test)
+
+# print svc.score(X_train, Y_train) # 0.854096520763
+
+# Random Forests
+
+random_forest = RandomForestClassifier(n_estimators=100)
+
+random_forest.fit(X_train, Y_train)
+
+Y_pred = random_forest.predict(X_test)
+
+print random_forest.score(X_train, Y_train)
+
+
+# knn = KNeighborsClassifier(n_neighbors = 3)
+
+# knn.fit(X_train, Y_train)
+
+# Y_pred = knn.predict(X_test)
+
+# print knn.score(X_train, Y_train) # 0.824915824916
+
+
+
+# Gaussian Naive Bayes
+
+# gaussian = GaussianNB()
+
+# gaussian.fit(X_train, Y_train)
+
+# Y_pred = gaussian.predict(X_test)
+
+# print gaussian.score(X_train, Y_train)  # 0.75645342312
+
+coeff_df = DataFrame(titanic_df.columns.delete(0))
+coeff_df.columns = ['Features']
+coeff_df["Coefficient Estimate"] = pd.Series(logreg.coef_[0])
+
+
+
+
+
+submission = pd.DataFrame({
+        "PassengerId": test_df["PassengerId"],
+        "Survived": Y_pred
+    })
+submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
 
 
