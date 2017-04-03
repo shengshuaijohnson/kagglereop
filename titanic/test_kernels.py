@@ -26,12 +26,24 @@ from sklearn.naive_bayes import GaussianNB                  # 朴素贝叶斯 im
 titanic_df = pd.read_csv('train.csv')
 test_df    = pd.read_csv('test.csv')
 
+df = titanic_df
+
+sum = 0
+def test(i):
+    global sum
+    sum += 1
+    print sum
+
+df.apply(test,axis=1)
+
+
 # print titanic_df.head()
 titanic_df = titanic_df.drop(['PassengerId','Name','Ticket'], axis=1)       # 其实不是很必要，drop了舒服一点（or节约内存？）
 test_df    = test_df.drop(['Name','Ticket'], axis=1)
 
 # only in titanic_df, fill the two missing values with the most occurred value, which is 'S'.
 titanic_df['Embarked'] = titanic_df['Embarked'].fillna('S')
+# titanic_df['Age'], titanic_df['Sex'] = titanic_df['Sex'], titanic_df['Age']
 
 # sns.factorplot('Embarked','Survived', data=titanic_df,size=4,aspect=3)
 
@@ -311,10 +323,20 @@ coeff_df["Coefficient Estimate"] = pd.Series(logreg.coef_[0])
 
 
 
-submission = pd.DataFrame({
-        "PassengerId": test_df["PassengerId"],
-        "Survived": Y_pred
-    })
-submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
+# submission = pd.DataFrame({
+#         "PassengerId": test_df["PassengerId"],
+#         "Survived": Y_pred
+#     })
+# submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
 
 
+cache = []# 记得初始化 
+batch_size = 100 
+
+
+# print res  原本在这里要输出的，现在改为如下
+
+cache.append(res)
+if len(cache) > batch_size:
+    print cache
+    cache = []

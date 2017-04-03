@@ -3,12 +3,12 @@
 # # Author: Yixuan Zhao <johnsonqrr (at) gmail.com>
 
 # import tensorflow as tf
-# import numpy as np
-# x_data = np.float32(np.random.rand(2, 100)) # 随机输入  二维x点
-# y_data = np.dot([0.100, 0.200], x_data) + 9.5
+import numpy as np
+x_data = np.float32(np.random.rand(2, 100)) # 随机输入  二维x点
+y_data = np.dot([0.100, 0.200], x_data) + 9.5
 # print np.dot([1, 2], x_data)
 # # print (x_data)
-# # print help(np.dot)
+print help(np.dot)
 # # 构造一个线性模型
 # b = tf.Variable(tf.zeros([1]))
 # W = tf.Variable(tf.random_uniform([1, 2], -1.0, 1.0))
@@ -38,9 +38,9 @@
 
 
 
-import requests
+# import requests
 
 
-url = 'http://www.wwhhll.com/forum.php?mod=viewthread&tid=3972&extra=page%3D2%26filter%3Dsortid%26orderby%3Dlastpost%26sortid%3D13'
+# url = 'http://www.wwhhll.com/forum.php?mod=viewthread&tid=3972&extra=page%3D2%26filter%3Dsortid%26orderby%3Dlastpost%26sortid%3D13'
 
-print requests.get(url).text
+# print requests.get(url).text
