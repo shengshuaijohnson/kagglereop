@@ -242,8 +242,8 @@ pclass_dummies.columns = ['Class1', 'Class2', 'Class3']
 pclass_dummies.drop(['Class3'], axis=1, inplace=True)
 
 pclass_dummies_test  = pd.get_dummies(test_df['Pclass'])
-pclass_dummies_test.columns = ['Class_1','Class_2','Class_3']
-pclass_dummies_test.drop(['Class_3'], axis=1, inplace=True)
+pclass_dummies_test.columns = ['Class1','Class2','Class3']
+pclass_dummies_test.drop(['Class3'], axis=1, inplace=True)
 
 
 titanic_df.drop(['Pclass'],axis=1,inplace=True)
@@ -315,28 +315,21 @@ print random_forest.score(X_train, Y_train)
 
 # print gaussian.score(X_train, Y_train)  # 0.75645342312
 
-coeff_df = DataFrame(titanic_df.columns.delete(0))
-coeff_df.columns = ['Features']
-coeff_df["Coefficient Estimate"] = pd.Series(logreg.coef_[0])
 
 
 
 
-
-# submission = pd.DataFrame({
-#         "PassengerId": test_df["PassengerId"],
-#         "Survived": Y_pred
-#     })
-# submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
+import xgboost  as xgb
+print 'xgboost'
+gbm = xgb.XGBClassifier(max_depth=3, n_estimators=300, learning_rate=0.05).fit(X_train, Y_train)
 
 
-cache = []# 记得初始化 
-batch_size = 100 
+predictions = gbm.predict(X_test)
+
+submission = pd.DataFrame({
+        "PassengerId": test_df["PassengerId"],
+        "Survived": predictions
+    })
+submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
 
 
-# print res  原本在这里要输出的，现在改为如下
-
-cache.append(res)
-if len(cache) > batch_size:
-    print cache
-    cache = []
