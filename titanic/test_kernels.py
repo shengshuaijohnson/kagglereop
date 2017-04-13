@@ -28,13 +28,7 @@ test_df    = pd.read_csv('test.csv')
 
 df = titanic_df
 
-sum = 0
-def test(i):
-    global sum
-    sum += 1
-    print sum
 
-df.apply(test,axis=1)
 
 
 # print titanic_df.head()
@@ -292,7 +286,8 @@ random_forest.fit(X_train, Y_train)
 
 Y_pred = random_forest.predict(X_test)
 
-print random_forest.score(X_train, Y_train)
+
+# print random_forest.score(X_train, Y_train)
 
 
 # knn = KNeighborsClassifier(n_neighbors = 3)
@@ -307,29 +302,41 @@ print random_forest.score(X_train, Y_train)
 
 # Gaussian Naive Bayes
 
-# gaussian = GaussianNB()
+gaussian = GaussianNB()
 
-# gaussian.fit(X_train, Y_train)
+
+gaussian.fit(X_train, Y_train)
+# Y_pred = gaussian.predict(X_test)
+
+
+# print gaussian.score(X_train, Y_train)  # 0.75645342312
+for t in range(10):
+    X_merged =  X_train.append(X_test)
+    Y_merged = Y_train.append(pd.DataFrame(Y_pred))
+    gaussian.fit(X_merged, Y_merged)
+    Y_pred = gaussian.predict(X_test)
+    print gaussian.score(X_train, Y_train)  # 0.73063973064    # 可以看到，混合使用数据，会使准确率向（对于训练数据）低的方向收敛
+X_merged =  X_train.append(X_test)
+Y_merged = Y_train.append(pd.DataFrame(Y_pred))
+
+# gaussian.fit(X_merged, Y_merged)
+# print gaussian.score(X_train, Y_train)  # 0.73063973064
 
 # Y_pred = gaussian.predict(X_test)
 
-# print gaussian.score(X_train, Y_train)  # 0.75645342312
 
 
+# import xgboost  as xgb
+# print 'xgboost'
+# gbm = xgb.XGBClassifier(max_depth=3, n_estimators=300, learning_rate=0.1).fit(X_train, Y_train)
 
 
-
-import xgboost  as xgb
-print 'xgboost'
-gbm = xgb.XGBClassifier(max_depth=3, n_estimators=300, learning_rate=0.05).fit(X_train, Y_train)
-
-
-predictions = gbm.predict(X_test)
-
+# predictions = gbm.predict(X_test)
 submission = pd.DataFrame({
         "PassengerId": test_df["PassengerId"],
-        "Survived": predictions
+        "Survived": Y_pred
     })
 submission.to_csv('titanic.csv', index=False)  # 注意输出的方法！ HIN关键
 
 
+sns.plt.show()
