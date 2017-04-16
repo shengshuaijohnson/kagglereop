@@ -231,6 +231,7 @@ test_df.drop(['Person'],axis=1,inplace=True)
 # sns.countplot(x='Pclass',hue='Survived', data=titanic_df,ax=axis1)
 # sns.factorplot('Pclass','Survived',order=[1,2,3], data=titanic_df,size=5)
 
+
 pclass_dummies = pd.get_dummies(titanic_df['Pclass'])
 pclass_dummies.columns = ['Class1', 'Class2', 'Class3']
 pclass_dummies.drop(['Class3'], axis=1, inplace=True)
