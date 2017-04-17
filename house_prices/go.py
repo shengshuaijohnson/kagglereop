@@ -84,7 +84,9 @@ train.drop(list(all_null), axis=1, inplace=1)
 test.drop(list(all_null),  axis=1, inplace=1)
 
 
-def string_to_num(df,col):  # 用dummies其实也可以，但是因为有多个值的情况索性直接这样了
+def string_to_num(df,col):  
+    # 用dummies其实也可以，但是因为有多个值的情况索性直接这样了
+    # 准确的说用dummies的模式应该是更好的，否则例如0-24那一栏拟合就拟合爆炸了，分成不同栏以1，0表示在计算上更合理
     try:
         a = float(df[col][0])
     except:
