@@ -11,8 +11,13 @@ from sklearn import ensemble, tree, linear_model
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.utils import shuffle       # 这几行import都好妖路。。。跟以前看到的不太一样
+# r2_score 量化表示拟合准确度，最高为1，可为负
+# mean_squared_error 均方误差  （别误解error的意思了）  (ai-bi) ** 2 i=1->n累加  再除以n 后开平方
+# 和方差 SSE(The sum of squares due to error)= 对应点误差的平方和
+# 均方差 MSE(Mean squared error)             = SSE/n
+# 均方根 RMSE(Root mean squared error)       = sqrt(MSE)
 
-
+# train_test_split 是用来在测试数据中分割部分训练，部分测试的（之前用的是全用train，再用同一批数据看拟合程度）
 
 # import warnings
 # warnings.filterwarnings('ignore')
@@ -34,10 +39,88 @@ NAs = pd.concat([train.isnull().sum(), test.isnull().sum()], axis=1, keys=['Trai
 # print type(NAs.sum(axis=1) > 0)
 count = 0
 x = NAs[NAs.sum(axis=1) > 0]  # 这种语法只要记得 NAs.sum(axis=1) > 0 返回的是一个boolean series就可以了
-print x.sum()
+# print train[train['BsmtFullBath'].isnull()]
+
+
 # print train['LotFrontage'].isnull()
 
 # s =  train.isnull().sum(axis=0)  # 其实和上面是一样的功能，只是自己尝试一下别的表达方法
 # print s.iloc[s.nonzero()[0]].count() # train 19个,test 33个 可以发现在这个问题里有大量的可能为空的feature   另外空数据各自有7000个
 
-# print train.isnull()
+
+def get_score(prediction, lables):    
+    print('R2: {}'.format(r2_score(prediction, lables)))                # help里写明参数顺序是true再pre，但是即使反过来结果也是一样的
+    print('RMSE: {}'.format(np.sqrt(mean_squared_error(prediction, lables))))
+
+# print help(mean_squared_error)
+def train_test(estimator, x_train, x_test, y_train, y_test):         
+    # 这个函数的设计可以在各类不同模型的评估上得到复用，值得借鉴
+    # 主要原因是sklearn的模型里的预测都是统一的predict方法，才得以实现，否则可能要传入函数之类的
+    # 感觉x_train,y_train,x_test,y_test的参数顺序会更好
+    prediction_train = estimator.predict(x_train)           
+    print  (estimator)
+    get_score(prediction_train, y_train)
+
+    prediction_test = estimator.predict(x_test)
+    print "Test"
+    get_score(prediction_test, y_test)
+
+# ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
+'''
+NAs = pd.DataFrame(train.isnull().sum())
+
+# print type(NAs>0)
+print '##########'
+# print type(NAs.sum(axis=1) > 0)
+null_cols_df =  NAs[NAs.sum(axis=1) > 0] # 之所以不字节用NAs是因为会返回df，而不是Series
+
+
+NAs_test = pd.DataFrame(test.isnull().sum())
+null_cols_df_test =  NAs_test[NAs_test.sum(axis=1) > 0] 
+
+all_null =  null_cols_df_test.index.union(null_cols_df.index)
+
+train.drop(list(all_null), axis=1, inplace=1)
+test.drop(list(all_null),  axis=1, inplace=1)
+
+
+def string_to_num(df,col):  # 用dummies其实也可以，但是因为有多个值的情况索性直接这样了
+    try:
+        a = float(df[col][0])
+    except:
+        val_set = set()
+        for i in df[col]:
+            val_set.add(i)
+        # print len(val_set)        # 最多有25个
+        val_dict = dict(zip(list(val_set),range(len(val_set))))
+        df[col] = df[col].apply(lambda a:val_dict[a])
+    # 写完发现过于暴力，搜不鸟列
+
+
+
+
+for col in train.columns:
+    string_to_num(train, col)
+for col in test.columns:
+    string_to_num(test, col)
+train_features = train.drop('SalePrice',axis=1)
+train_labels = pd.DataFrame(train['SalePrice'])
+
+
+
+
+x_train, x_test, y_train, y_test = train_test_split(train_features, train_labels, test_size=0.1, random_state=200)
+ENSTest = linear_model.ElasticNetCV(alphas=[0.0001, 0.0005, 0.0001, 0.001, 0.01, 0.1, 1], l1_ratio=[.01, .1, .5, .9, .99], max_iter=5000).fit(x_train, y_train) # 这个参数未收敛，暂时不管了
+train_test(ENSTest, x_train, x_test, y_train, y_test)
+# TODO：查阅 ElasticNetCV模型相关知识，参数含义
+# 妈个鸡，RMSE大的批爆，几万，果然不行
+
+# Final_labels = ENSTest.predict(test)
+# pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-17.csv', index =False)  
+# 这样算出来的数据甚至有负数，kaggle上提交也是error，不知道是不是单纯负值的原因
+# ======
+'''
+
+# print help(linear_model.ElasticNetCV)
+
+
