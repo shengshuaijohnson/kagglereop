@@ -19,6 +19,10 @@ from sklearn.utils import shuffle       # 这几行import都好妖路。。。�
 
 # train_test_split 是用来在测试数据中分割部分训练，部分测试的（之前用的是全用train，再用同一批数据看拟合程度）
 
+# Elastic net  弹性网络  -- hybrid of Lasso  and Ridge Regression techniques
+
+# TODO:学习正则化，L1，L2相关知识，备忘录里的文章记得看
+
 # import warnings
 # warnings.filterwarnings('ignore')
 
@@ -64,6 +68,15 @@ def train_test(estimator, x_train, x_test, y_train, y_test):
     prediction_test = estimator.predict(x_test)
     print "Test"
     get_score(prediction_test, y_test)
+
+
+
+# import seaborn as sns
+# facet = sns.FacetGrid(train, aspect=4)
+# facet.map(sns.kdeplot,'SalePrice',shade= True) # 房价分布，这个函数比较陌生，纵坐标还不会改
+# sns.plt.show()
+
+
 
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
 '''
