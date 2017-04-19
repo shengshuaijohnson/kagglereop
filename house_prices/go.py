@@ -76,6 +76,34 @@ def train_test(estimator, x_train, x_test, y_train, y_test):
 # facet.map(sns.kdeplot,'SalePrice',shade= True) # 房价分布，这个函数比较陌生，纵坐标还不会改
 # sns.plt.show()
 
+# ax = sns.distplot(train['SalePrice'],kde=False)           # 我晕，直接用这个就可以代替上面的了，当然结果不太一样，不过大致可视化上都差不多。
+# sns.plt.show()                                            # 另外此方法里也有默认为True的kde参数：Whether to plot a gaussian kernel density estimate.影响是否绘制预估曲线。
+                                                          # 这里的kernel和课上教的的好像不太一样？还是单纯形式不同？相关理解还不够到位。
+
+
+train_labels = train.pop('SalePrice')       # 干脆叫train_Y多方便=。=
+
+features = pd.concat([train, test], keys=['tarin', 'test']) # 默认axis=0,即按行添加
+# 这个操作比较不一样,直接按行拼在一起了。。
+
+
+# 下面的drop操作比较主观，这里是丢弃空数据较多或者作者认为与价格无关的feature(岂不是意味着要吧80来个feature含义都看一遍?)
+# 但是看到Alley没被drop，或许是作者这个or表述不精确，是同时考虑NA以及价格相关两个因素？到后面noacess的处理后可以再回来看这边
+features.drop(['Utilities', 'RoofMatl', 'MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'Heating', 'LowQualFinSF',
+               'BsmtFullBath', 'BsmtHalfBath', 'Functional', 'GarageYrBlt', 'GarageArea', 'GarageCond', 'WoodDeckSF',
+               'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea', 'PoolQC', 'Fence', 'MiscFeature', 'MiscVal'],
+              axis=1, inplace=True)
+
+
+# print features.columns            # 缩减到56 features(include Id)
+
+features['MSSubClass'] = features['MSSubClass'].astype(str)     # 蛤？数字转成字符？？
+
+# print set(features['MSZoning'].values)      # 大概看一下有哪些值，我凭直觉直接写出这个表达式，太TM机智了
+
+features['MSZoning'] = features['MSZoning'].fillna(features['MSZoning'].mode()[0])
+print (features['LandContour'].mode())       # mode返回出现频率最高的data,如果有并列情况则一并返回(先后顺序未知) (自测过)
+
 
 
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
