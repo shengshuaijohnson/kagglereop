@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 # import matplotlib.pyplot as plt
-# import seaborn as sns
+import seaborn as sns
 from sklearn import ensemble, tree, linear_model
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score, mean_squared_error
@@ -70,6 +70,10 @@ def train_test(estimator, x_train, x_test, y_train, y_test):
     get_score(prediction_test, y_test)
 
 
+def fill_with_popular(df, col):
+    # 经测试df是可变类型，不需额外返回（当然也可以设计成带inplace参数的）
+    # 或者说，既然存在可以设置inplace参数的方法，那么不测试也可以推出df必然是可变类型
+    df[col] = df[col].fillna(df[col].mode()[0])
 
 # import seaborn as sns
 # facet = sns.FacetGrid(train, aspect=4)
@@ -111,12 +115,57 @@ features['LotFrontage']  = features['LotFrontage'].fillna(features['LotFrontage'
 features['Alley'] = features['Alley'].fillna('NOACCESS')
 
 
+features.OverallCond = features.OverallCond.astype(str) # 我靠，这种语法也是支持的么？
+
+fill_with_popular(features, 'MasVnrType')
+
+
+# 这个和之前的ALLEY一样，都是吧desp里NA有定义的给换成其相应定义，话说这几个词真是XNMBYY。。。
+for col in ('BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2'):
+    features[col] = features[col].fillna('NoBSMT')
+
+# 这个是作者假设的
+features['TotalBsmtSF'] = features['TotalBsmtSF'].fillna(0)
+
+
+features['Electrical'] = features['Electrical'].fillna(features['Electrical'].mode()[0])
+
+
+
+features['KitchenAbvGr'] = features['KitchenAbvGr'].astype(str)     
+# 全部都要转成str？还是部分转？全部的话可以干脆些一个函数全转了啊，TODO：看看有没有显示每一列属性的方法
+# 感觉kaggle上有些人的写法好僵硬，代码疯狂repeat yourself，为什么不封装成通用的函数，是coding方面比较弱，还是在展示解法的时候不喜欢写函数？有其它的考量？
+fill_with_popular(features, 'KitchenQual') 
+
+features['FireplaceQu'] = features['FireplaceQu'].fillna('NoFP')
+
+for col in ('GarageType', 'GarageFinish', 'GarageQual'):
+    features[col] = features[col].fillna('NoGRG')
+
+features['GarageCars'] = features['GarageCars'].fillna(0.0)     
+
+
+
+fill_with_popular(features, 'SaleType')
+
+# Year and Month to categorical
+features['YrSold'] = features['YrSold'].astype(str)
+features['MoSold'] = features['MoSold'].astype(str)
+
+
+# Adding total sqfootage feature and removing Basement, 1st and 2nd floor features
+features['TotalSF'] = features['TotalBsmtSF'] + features['1stFlrSF'] + features['2ndFlrSF']
+features.drop(['TotalBsmtSF', '1stFlrSF', '2ndFlrSF'], axis=1, inplace=True)
+# 直接算总面积，我佛。
+
+# 到这里我明白了，一些量化的feature为数字形式就不转，而一些是数字形式，含义却是一类标志，没有相应 1+1=2运算法则的feature就转成str
+# 这里有个chinglish使用者的究极问题在： 表述“一些feature”的时候到底单数形式还是用复数形式的“一些features”呢？ （港三小？）
+ax = sns.distplot(train_labels)
 
 
 
 
-
-
+sns.plt.show()
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
 '''
 NAs = pd.DataFrame(train.isnull().sum())
