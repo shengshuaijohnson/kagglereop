@@ -102,7 +102,18 @@ features['MSSubClass'] = features['MSSubClass'].astype(str)     # 蛤？数字�
 # print set(features['MSZoning'].values)      # 大概看一下有哪些值，我凭直觉直接写出这个表达式，太TM机智了
 
 features['MSZoning'] = features['MSZoning'].fillna(features['MSZoning'].mode()[0])
-print (features['LandContour'].mode())       # mode返回出现频率最高的data,如果有并列情况则一并返回(先后顺序未知) (自测过)
+# print (features['LandContour'].mode())       # mode返回出现频率最高的data,如果有并列情况则一并返回(先后顺序未知) (自测过)
+
+
+features['LotFrontage']  = features['LotFrontage'].fillna(features['LotFrontage'].mode()[0])
+
+# Alley  NA in all. NA means no access
+features['Alley'] = features['Alley'].fillna('NOACCESS')
+
+
+
+
+
 
 
 
