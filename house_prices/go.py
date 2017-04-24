@@ -70,19 +70,19 @@ def train_test(estimator, x_train, x_test, y_train, y_test):
     get_score(prediction_test, y_test)
 
 
-def fill_with_popular(df, col):
+def fillna_with_popular(df, col):
     # 经测试df是可变类型，不需额外返回（当然也可以设计成带inplace参数的）
     # 或者说，既然存在可以设置inplace参数的方法，那么不测试也可以推出df必然是可变类型
     df[col] = df[col].fillna(df[col].mode()[0])
 
-# import seaborn as sns
+
 # facet = sns.FacetGrid(train, aspect=4)
 # facet.map(sns.kdeplot,'SalePrice',shade= True) # 房价分布，这个函数比较陌生，纵坐标还不会改
-# sns.plt.show()
+
 
 # ax = sns.distplot(train['SalePrice'],kde=False)           # 我晕，直接用这个就可以代替上面的了，当然结果不太一样，不过大致可视化上都差不多。
-# sns.plt.show()                                            # 另外此方法里也有默认为True的kde参数：Whether to plot a gaussian kernel density estimate.影响是否绘制预估曲线。
-                                                          # 这里的kernel和课上教的的好像不太一样？还是单纯形式不同？相关理解还不够到位。
+                                                            # 另外此方法里也有默认为True的kde参数：Whether to plot a gaussian kernel density estimate.影响是否绘制预估曲线。
+                                                            # 注意这里的高斯 kernel
 
 
 train_labels = train.pop('SalePrice')       # 干脆叫train_Y多方便=。=
@@ -105,19 +105,18 @@ features['MSSubClass'] = features['MSSubClass'].astype(str)     # 蛤？数字�
 
 # print set(features['MSZoning'].values)      # 大概看一下有哪些值，我凭直觉直接写出这个表达式，太TM机智了
 
-features['MSZoning'] = features['MSZoning'].fillna(features['MSZoning'].mode()[0])
+
+fillna_with_popular(features, 'MSZoning')
 # print (features['LandContour'].mode())       # mode返回出现频率最高的data,如果有并列情况则一并返回(先后顺序未知) (自测过)
 
-
-features['LotFrontage']  = features['LotFrontage'].fillna(features['LotFrontage'].mode()[0])
-
+fillna_with_popular(features, 'LotFrontage')
 # Alley  NA in all. NA means no access
 features['Alley'] = features['Alley'].fillna('NOACCESS')
 
 
 features.OverallCond = features.OverallCond.astype(str) # 我靠，这种语法也是支持的么？
 
-fill_with_popular(features, 'MasVnrType')
+fillna_with_popular(features, 'MasVnrType')
 
 
 # 这个和之前的ALLEY一样，都是吧desp里NA有定义的给换成其相应定义，话说这几个词真是XNMBYY。。。
@@ -128,14 +127,13 @@ for col in ('BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType
 features['TotalBsmtSF'] = features['TotalBsmtSF'].fillna(0)
 
 
-features['Electrical'] = features['Electrical'].fillna(features['Electrical'].mode()[0])
-
+fillna_with_popular(features, 'Electrical')
 
 
 features['KitchenAbvGr'] = features['KitchenAbvGr'].astype(str)     
 # 全部都要转成str？还是部分转？全部的话可以干脆些一个函数全转了啊，TODO：看看有没有显示每一列属性的方法
 # 感觉kaggle上有些人的写法好僵硬，代码疯狂repeat yourself，为什么不封装成通用的函数，是coding方面比较弱，还是在展示解法的时候不喜欢写函数？有其它的考量？
-fill_with_popular(features, 'KitchenQual') 
+fillna_with_popular(features, 'KitchenQual') 
 
 features['FireplaceQu'] = features['FireplaceQu'].fillna('NoFP')
 
@@ -146,7 +144,7 @@ features['GarageCars'] = features['GarageCars'].fillna(0.0)
 
 
 
-fill_with_popular(features, 'SaleType')
+fillna_with_popular(features, 'SaleType')
 
 # Year and Month to categorical
 features['YrSold'] = features['YrSold'].astype(str)
@@ -160,12 +158,24 @@ features.drop(['TotalBsmtSF', '1stFlrSF', '2ndFlrSF'], axis=1, inplace=True)
 
 # 到这里我明白了，一些量化的feature为数字形式就不转，而一些是数字形式，含义却是一类标志，没有相应 1+1=2运算法则的feature就转成str
 # 这里有个chinglish使用者的究极问题在： 表述“一些feature”的时候到底单数形式还是用复数形式的“一些features”呢？ （港三小？）
-ax = sns.distplot(train_labels)
+# ax = sns.distplot(train_labels)
+
+
+numeric_features = features.loc[:,['LotFrontage', 'LotArea', 'GrLivArea', 'TotalSF']]       # 切片还可以不是数字的！注意loc和iloc的区别
+# print numeric_features
+numeric_features_standardized = (numeric_features - numeric_features.mean())/numeric_features.std()
+# attention！！！利用除以标准差进行standardize，统一转为 -1 ~ 1之间的数字      TODO：测试模型的时候不转看看是否有影响，我感觉理论上最佳情况并不会影响结果，反正都是对拟合出的omega向量进行缩放
+
+ax = sns.pairplot(numeric_features_standardized)        # 好屌啊，不同栏之间的相对分布,图的个数为L*L，L是传入df的col长度
+
+
+conditions = set([x for x in features['Condition1']] + [x for x in features['Condition2']]) 
+
+# conditions2 = set(list(features['Condition1'].values + features['Condition2'].values))  # 这样写之所以会出错是因为ndarray的相加会将其中各个元素的值直接相加，而不是列表的extend效果
 
 
 
 
-sns.plt.show()
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
 '''
 NAs = pd.DataFrame(train.isnull().sum())
@@ -227,3 +237,4 @@ train_test(ENSTest, x_train, x_test, y_train, y_test)
 # print help(linear_model.ElasticNetCV)
 
 
+sns.plt.show()
