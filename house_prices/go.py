@@ -166,14 +166,50 @@ numeric_features = features.loc[:,['LotFrontage', 'LotArea', 'GrLivArea', 'Total
 numeric_features_standardized = (numeric_features - numeric_features.mean())/numeric_features.std()
 # attention！！！利用除以标准差进行standardize，统一转为 -1 ~ 1之间的数字      TODO：测试模型的时候不转看看是否有影响，我感觉理论上最佳情况并不会影响结果，反正都是对拟合出的omega向量进行缩放
 
-ax = sns.pairplot(numeric_features_standardized)        # 好屌啊，不同栏之间的相对分布,图的个数为L*L，L是传入df的col长度
+# ax = sns.pairplot(numeric_features_standardized)        # 好屌啊，不同栏之间的相对分布,图的个数为L*L，L是传入df的col长度
 
 
 conditions = set([x for x in features['Condition1']] + [x for x in features['Condition2']]) 
-
 # conditions2 = set(list(features['Condition1'].values + features['Condition2'].values))  # 这样写之所以会出错是因为ndarray的相加会将其中各个元素的值直接相加，而不是列表的extend效果
 
+dummies = pd.DataFrame(
+    data=np.zeros((len(features.index), len(conditions))),          # np.zeros 创建相应行数和列数的ndarray 0矩阵
+    index=features.index, columns=conditions)
+# 有np.zeros，应该也有相应的创建单位矩阵方法吧？
 
+for i, cond in enumerate(zip(features['Condition1'], features['Condition2'])):      # 由于有两列，所以直接用get dummies比较麻烦，采取手动完成,非要用的话可能要分别取然后对相应元素做或操作 or相加再缩小什么的
+    dummies.ix[i, cond] = 1                 # 索引时带个tuple是什么鬼？是对两个值都赋1？
+    # if cond[0] == 'Norm' and cond[1] != 'Norm':
+        # print 'hoho'            # no output
+    # 根据这个测试和对desc的推测，应该是condition1代表相应的地理条件，condition2是为了多个“条件”时用来放的，这也代表了：
+    # 1.每个房屋顶多只能拥有（或者说记录下）两个条件
+    # 2.不存在任何特殊条件时，两个值全是Norm
+    # 3.当只有一个条件时，优先以condition1表示，condition2仍为Norm
+    # 4.当拥有两个条件时，先后顺序似乎不一定？
+
+
+# dummies_cond1  = pd.get_dummies(features['Condition1'])#, features['Condition2'])
+# dummies_cond2  = pd.get_dummies(features['Condition2'])   # 试了一下，麻烦的一批
+
+exteriors = set([x for x in features['Exterior1st']] + [x for x in features['Exterior2nd']])
+
+dummies = pd.DataFrame(data=np.zeros((len(features.index), len(exteriors))),
+                       index=features.index, columns=exteriors)
+
+for i, ext in enumerate(zip(features['Exterior1st'], features['Exterior2nd'])):
+    dummies.ix[i, ext] = 1
+features = pd.concat([features, dummies.add_prefix('Exterior_')], axis=1)
+features.drop(['Exterior1st', 'Exterior2nd', 'Exterior_nan'], axis=1, inplace=True)
+# 大同小异的操作，Exterior covering是房子外部材料还装修什么的？不是hin好翻译，差不多这个意思
+
+for col in features.dtypes[features.dtypes == 'object'].index:
+    for_dummy = features.pop(col)
+    features = pd.concat([features, pd.get_dummies(for_dummy, prefix=col)], axis=1)
+
+features_standardized = features.copy()
+
+features_standardized.update(numeric_features_standardized)
+# update！！
 
 
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
@@ -237,4 +273,4 @@ train_test(ENSTest, x_train, x_test, y_train, y_test)
 # print help(linear_model.ElasticNetCV)
 
 
-sns.plt.show()
+# sns.plt.show()
