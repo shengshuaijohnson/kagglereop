@@ -87,9 +87,8 @@ def fillna_with_popular(df, col):
 
 train_labels = train.pop('SalePrice')       # 干脆叫train_Y多方便=。=
 
-features = pd.concat([train, test], keys=['tarin', 'test']) # 默认axis=0,即按行添加
+features = pd.concat([train, test], keys=['train', 'test']) # 默认axis=0,即按行添加
 # 这个操作比较不一样,直接按行拼在一起了。。
-
 
 # 下面的drop操作比较主观，这里是丢弃空数据较多或者作者认为与价格无关的feature(岂不是意味着要吧80来个feature含义都看一遍?)
 # 但是看到Alley没被drop，或许是作者这个or表述不精确，是同时考虑NA以及价格相关两个因素？到后面noacess的处理后可以再回来看这边
@@ -160,7 +159,8 @@ features.drop(['TotalBsmtSF', '1stFlrSF', '2ndFlrSF'], axis=1, inplace=True)
 # 这里有个chinglish使用者的究极问题在： 表述“一些feature”的时候到底单数形式还是用复数形式的“一些features”呢？ （港三小？）
 # ax = sns.distplot(train_labels)
 
-
+train_labels = np.log(train_labels)     # 之前没取log，TODO:研究一蛤取不取的区别
+# ax = sns.distplot(train_labels)
 numeric_features = features.loc[:,['LotFrontage', 'LotArea', 'GrLivArea', 'TotalSF']]       # 切片还可以不是数字的！注意loc和iloc的区别
 # print numeric_features
 numeric_features_standardized = (numeric_features - numeric_features.mean())/numeric_features.std()
@@ -212,12 +212,55 @@ features_standardized.update(numeric_features_standardized)
 # update！！
 
 
+train_features = features.loc['train'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
+test_features = features.loc['test'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
+
+
+train_features_st = features_standardized.loc['train'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
+test_features_st = features_standardized.loc['test'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
+
+
+
+# st和非st数据的差别主要在于 numeric_features 这个update过程，所以看来对计算还是有影响！
+
+train_features_st, train_features, train_labels = shuffle(train_features_st, train_features, train_labels, random_state = 5)
+
+#   shuffle:统一随机，每行元素之间的相对位置不变，感觉在计算过程中不是必要的？
+
+
+x_train, x_test, y_train, y_test = train_test_split(train_features, train_labels, test_size=0.1, random_state=200)
+x_train_st, x_test_st, y_train_st, y_test_st = train_test_split(train_features_st, train_labels, test_size=0.1, random_state=200)
+# 注意unpack的先后顺序, test_size=0.1代表取0.1作为test，其余train
+# print x_train.shape
+# print  x_test.shape
+# print x_train_st.shape
+
+
+# ggggg
+# author : My analysis revealed that Gradient Boosting and Elastic Net (using Standardized Features) show best results.
+
+ENSTest = linear_model.ElasticNetCV(alphas=[0.0001, 0.0005, 0.001, 0.01, 0.1, 1, 10], l1_ratio=[.01, .1, .5, .9, .99], max_iter=5000).fit(x_train_st, y_train_st)
+train_test(ENSTest, x_train_st, x_test_st, y_train_st, y_test_st)
+
+Final_labels = ENSTest.predict(test_features_st)
+Final_labels = np.exp(Final_labels)
+# pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-25-elasticnet.csv', index =False)  
+
+
+# GBest = ensemble.GradientBoostingRegressor(n_estimators=3000, learning_rate=0.05, max_depth=3, max_features='sqrt',
+#                                                min_samples_leaf=15, min_samples_split=10, loss='huber').fit(x_train, y_train)
+# train_test(GBest, x_train, x_test, y_train, y_test)
+
+
 # ======== 以下为自己粗暴地抛去所有na的拟合练手，主要熟悉pd操作,以及拟合的模型（此前用的都是分类的）
 '''
+train = pd.read_csv('train.csv')
+test   = pd.read_csv('test.csv')
 NAs = pd.DataFrame(train.isnull().sum())
 
 # print type(NAs>0)
 print '##########'
+
 # print type(NAs.sum(axis=1) > 0)
 null_cols_df =  NAs[NAs.sum(axis=1) > 0] # 之所以不字节用NAs是因为会返回df，而不是Series
 
@@ -253,7 +296,7 @@ for col in train.columns:
 for col in test.columns:
     string_to_num(test, col)
 train_features = train.drop('SalePrice',axis=1)
-train_labels = pd.DataFrame(train['SalePrice'])
+train_labels = np.log(pd.DataFrame(train['SalePrice']))
 
 
 
@@ -263,14 +306,17 @@ ENSTest = linear_model.ElasticNetCV(alphas=[0.0001, 0.0005, 0.0001, 0.001, 0.01,
 train_test(ENSTest, x_train, x_test, y_train, y_test)
 # TODO：查阅 ElasticNetCV模型相关知识，参数含义
 # 妈个鸡，RMSE大的批爆，几万，果然不行
+# 我晕，之前蠢了，自己太TM傻逼了，RMSE的定义想想就知道了，很大是肯定的。。。。R2别太过分就行了。。。但问题是看R2也不低，偏偏结果出现了负数。。应该从没收敛判断不成功，而不是别的参数
+Final_labels = ENSTest.predict(test)
+Final_labels = np.exp(Final_labels) / 2
 
-# Final_labels = ENSTest.predict(test)
-# pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-17.csv', index =False)  
+# 奇怪，用了log训练再转回来，数据都正常的，feature没有任何改动，之后再多试一下。。
+# 提交以后分数0.8倒数前几十我佛= = 至少还算有效数据TTATT，考虑到暴力丢feature的情况下
+pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-25.csv', index =False)  
 # 这样算出来的数据甚至有负数，kaggle上提交也是error，不知道是不是单纯负值的原因
 # ======
 '''
 
 # print help(linear_model.ElasticNetCV)
-
 
 # sns.plt.show()
