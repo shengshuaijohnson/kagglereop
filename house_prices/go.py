@@ -11,6 +11,7 @@ from sklearn import ensemble, tree, linear_model
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.utils import shuffle       # 这几行import都好妖路。。。跟以前看到的不太一样
+
 # r2_score 量化表示拟合准确度，最高为1，可为负
 # mean_squared_error 均方误差  （别误解error的意思了）  (ai-bi) ** 2 i=1->n累加  再除以n 后开平方
 # 和方差 SSE(The sum of squares due to error)= 对应点误差的平方和
@@ -33,7 +34,6 @@ test   = pd.read_csv('test.csv')
 # test.columns.values[-1] = '123'
 # print (train.columns).difference(test.columns)    # '-'   also worked, but would show  a FutureWarning
 # 另外，不会显示index的差异来源，即，如果train多一个SalePrice，test多一个123，返回结果是['SalePrice','123'],共存不区分
-
 # print  train.head
 NAs = pd.concat([train.isnull().sum(), test.isnull().sum()], axis=1, keys=['Train', 'Test'])
 # NAs =  pd.DataFrame(train.isnull().sum())
@@ -56,7 +56,7 @@ def get_score(prediction, lables):
     print('R2: {}'.format(r2_score(prediction, lables)))                # help里写明参数顺序是true再pre，但是即使反过来结果也是一样的
     print('RMSE: {}'.format(np.sqrt(mean_squared_error(prediction, lables))))
 
-# print help(mean_squared_error)
+
 def train_test(estimator, x_train, x_test, y_train, y_test):         
     # 这个函数的设计可以在各类不同模型的评估上得到复用，值得借鉴
     # 主要原因是sklearn的模型里的预测都是统一的predict方法，才得以实现，否则可能要传入函数之类的
@@ -65,8 +65,12 @@ def train_test(estimator, x_train, x_test, y_train, y_test):
     print  (estimator)
     get_score(prediction_train, y_train)
 
-    prediction_test = estimator.predict(x_test)
+    
     print "Test"
+    # print 'use the score():{}'.format(estimator.score(x_test, y_test))      
+    #事实上自带的score()也是计算R2，但是结果有一丢丢不一样= =  ： Returns the coefficient of determination R^2 of the prediction.
+
+    prediction_test = estimator.predict(x_test)
     get_score(prediction_test, y_test)
 
 
@@ -242,8 +246,33 @@ x_train_st, x_test_st, y_train_st, y_test_st = train_test_split(train_features_s
 ENSTest = linear_model.ElasticNetCV(alphas=[0.0001, 0.0005, 0.001, 0.01, 0.1, 1, 10], l1_ratio=[.01, .1, .5, .9, .99], max_iter=5000).fit(x_train_st, y_train_st)
 train_test(ENSTest, x_train_st, x_test_st, y_train_st, y_test_st)
 
-Final_labels = ENSTest.predict(test_features_st)
-Final_labels = np.exp(Final_labels)
+
+
+
+# We use a lot of features and have many outliers. So I'm using max_features='sqrt' to reduce overfitting of my model. I also use loss='huber' because it more tolerant to outliers. All other hyper-parameters was chosen using GridSearchCV.
+# 根据异常值很多而选择参数！！
+GBest = ensemble.GradientBoostingRegressor(n_estimators=3000, learning_rate=0.05, max_depth=3, max_features='sqrt',
+                                               min_samples_leaf=15, min_samples_split=10, loss='huber').fit(x_train, y_train)
+train_test(GBest, x_train, x_test, y_train, y_test)
+
+
+
+GB_model = GBest.fit(train_features, train_labels)
+ENST_model = ENSTest.fit(train_features_st, train_labels)
+
+# from sklearn.externals import joblib
+# joblib.dump(GB_model,'GB_model.model')        # 保存模型的方法
+# GB_model=joblib.load('GB_model.model')
+
+
+Final_labels = (np.exp(GB_model.predict(test_features)) + np.exp(ENST_model.predict(test_features_st))) / 2
+pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-27.csv', index =False)    
+
+# scores = cross_val_score(GBest, train_features_st, train_labels, cv=5)
+# print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+# Final_labels = ENSTest.predict(test_features_st)
+# Final_labels = np.exp(Final_labels)
 # pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-25-elasticnet.csv', index =False)  
 
 
@@ -316,7 +345,5 @@ pd.DataFrame({'Id': test.Id, 'SalePrice': Final_labels}).to_csv('2017-04-25.csv'
 # 这样算出来的数据甚至有负数，kaggle上提交也是error，不知道是不是单纯负值的原因
 # ======
 '''
-
-# print help(linear_model.ElasticNetCV)
 
 # sns.plt.show()
