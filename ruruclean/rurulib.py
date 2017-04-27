@@ -20,3 +20,18 @@ def remove_duplication_by_line(filename):
         for line in lines:
             f.write(line)
             f.write('\n')
+
+def get_score(prediction, lables):    
+    from sklearn.metrics import r2_score, mean_squared_error
+    import math
+    print('R2: {}'.format(r2_score(prediction, lables)))            # help里写明参数顺序是true再pre，即使反过来结果也是一样的
+    print('RMSE: {}'.format(math.sqrt(mean_squared_error(prediction, lables))))     # 改成math因为加载比np快一点
+
+
+
+if __name__ == '__main__':
+    import pandas as pd
+    a = pd.Series(['1','2','3'])
+    b = pd.Series(['10', '9', '8'])
+    get_score(a, b)
+
