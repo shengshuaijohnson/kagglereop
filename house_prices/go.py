@@ -17,7 +17,7 @@ from sklearn.utils import shuffle       # 这几行import都好妖路。。。�
 # 和方差 SSE(The sum of squares due to error)= 对应点误差的平方和
 # 均方差 MSE(Mean squared error)             = SSE/n
 # 均方根 RMSE(Root mean squared error)       = sqrt(MSE)
-
+# TODO：试一下能否传入datatime时间进行计算？
 # train_test_split 是用来在测试数据中分割部分训练，部分测试的（之前用的是全用train，再用同一批数据看拟合程度）
 
 # Elastic net  弹性网络  -- hybrid of Lasso  and Ridge Regression techniques
@@ -44,7 +44,7 @@ NAs = pd.concat([train.isnull().sum(), test.isnull().sum()], axis=1, keys=['Trai
 count = 0
 x = NAs[NAs.sum(axis=1) > 0]  # 这种语法只要记得 NAs.sum(axis=1) > 0 返回的是一个boolean series就可以了
 # print train[train['BsmtFullBath'].isnull()]
-
+# 如果用NAs > 0的话由于是一个两列的df，不是一列的Series，结果里就会含NAN,当然其他非空数据也能看
 
 # print train['LotFrontage'].isnull()
 
@@ -92,8 +92,9 @@ def fillna_with_popular(df, col):
 train_labels = train.pop('SalePrice')       # 干脆叫train_Y多方便=。=
 
 features = pd.concat([train, test], keys=['train', 'test']) # 默认axis=0,即按行添加
-# 这个操作比较不一样,直接按行拼在一起了。。
 
+# Construct  hierarchical index using the passed keys as the outermost level
+# 这个操作比较不一样,直接按行拼在一起了。。
 # 下面的drop操作比较主观，这里是丢弃空数据较多或者作者认为与价格无关的feature(岂不是意味着要吧80来个feature含义都看一遍?)
 # 但是看到Alley没被drop，或许是作者这个or表述不精确，是同时考虑NA以及价格相关两个因素？到后面noacess的处理后可以再回来看这边
 features.drop(['Utilities', 'RoofMatl', 'MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'Heating', 'LowQualFinSF',
@@ -160,12 +161,14 @@ features.drop(['TotalBsmtSF', '1stFlrSF', '2ndFlrSF'], axis=1, inplace=True)
 # 直接算总面积，我佛。
 
 # 到这里我明白了，一些量化的feature为数字形式就不转，而一些是数字形式，含义却是一类标志，没有相应 1+1=2运算法则的feature就转成str
+# 补充：按理来说应该转成str更合适，但是自己删掉所有astype str测试后还上升了500名。。。。。之后还把astype加回来，精确率又掉回去了，所以应该不是随机因素导致。
 # 这里有个chinglish使用者的究极问题在： 表述“一些feature”的时候到底单数形式还是用复数形式的“一些features”呢？ （港三小？）
 # ax = sns.distplot(train_labels)
 
 train_labels = np.log(train_labels)     # 之前没取log，TODO:研究一蛤取不取的区别
 # ax = sns.distplot(train_labels)
-numeric_features = features.loc[:,['LotFrontage', 'LotArea', 'GrLivArea', 'TotalSF']]       # 切片还可以不是数字的！注意loc和iloc的区别
+numeric_features = features.loc[:,['LotFrontage', 'LotArea', 'GrLivArea', 'TotalSF']]       
+# 切片还可以不是数字的！注意loc和iloc的区别 : 前者在index的标签上切片，后者在index的位置上切片
 # print numeric_features
 numeric_features_standardized = (numeric_features - numeric_features.mean())/numeric_features.std()
 # attention！！！利用除以标准差进行standardize，统一转为 -1 ~ 1之间的数字      TODO：测试模型的时候不转看看是否有影响，我感觉理论上最佳情况并不会影响结果，反正都是对拟合出的omega向量进行缩放
@@ -219,7 +222,6 @@ features_standardized.update(numeric_features_standardized)
 train_features = features.loc['train'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
 test_features = features.loc['test'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
 
-
 train_features_st = features_standardized.loc['train'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
 test_features_st = features_standardized.loc['test'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
 
@@ -251,6 +253,7 @@ train_test(ENSTest, x_train_st, x_test_st, y_train_st, y_test_st)
 
 # We use a lot of features and have many outliers. So I'm using max_features='sqrt' to reduce overfitting of my model. I also use loss='huber' because it more tolerant to outliers. All other hyper-parameters was chosen using GridSearchCV.
 # 根据异常值很多而选择参数！！
+# TODO:浏览模型中各个参数的意义和作用，主要是max_features 和loss
 GBest = ensemble.GradientBoostingRegressor(n_estimators=3000, learning_rate=0.05, max_depth=3, max_features='sqrt',
                                                min_samples_leaf=15, min_samples_split=10, loss='huber').fit(x_train, y_train)
 train_test(GBest, x_train, x_test, y_train, y_test)
