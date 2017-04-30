@@ -194,6 +194,7 @@ for i, cond in enumerate(zip(features['Condition1'], features['Condition2'])):  
     # 3.当只有一个条件时，优先以condition1表示，condition2仍为Norm
     # 4.当拥有两个条件时，先后顺序似乎不一定？
 
+features.drop(['Condition1', 'Condition2'], axis=1, inplace=True)
 
 # dummies_cond1  = pd.get_dummies(features['Condition1'])#, features['Condition2'])
 # dummies_cond2  = pd.get_dummies(features['Condition2'])   # 试了一下，麻烦的一批
@@ -208,7 +209,6 @@ for i, ext in enumerate(zip(features['Exterior1st'], features['Exterior2nd'])):
 features = pd.concat([features, dummies.add_prefix('Exterior_')], axis=1)
 features.drop(['Exterior1st', 'Exterior2nd', 'Exterior_nan'], axis=1, inplace=True)
 # 大同小异的操作，Exterior covering是房子外部材料还装修什么的？不是hin好翻译，差不多这个意思
-
 for col in features.dtypes[features.dtypes == 'object'].index:
     for_dummy = features.pop(col)
     features = pd.concat([features, pd.get_dummies(for_dummy, prefix=col)], axis=1)
@@ -224,6 +224,9 @@ test_features = features.loc['test'].drop('Id', axis=1).select_dtypes(include=[n
 
 train_features_st = features_standardized.loc['train'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
 test_features_st = features_standardized.loc['test'].drop('Id', axis=1).select_dtypes(include=[np.number]).values
+# 这里转换是为了后面的split?因为模型本身的data是支持df格式的
+
+# ENSTest = linear_model.ElasticNetCV(alphas=[0.0001, 0.0005, 0.001, 0.01, 0.1, 1, 10], l1_ratio=[.01, .1, .5, .9, .99], max_iter=5000).fit(train_features, train_labels)
 
 
 
