@@ -28,6 +28,8 @@ def get_score(prediction, lables):
     print('RMSE: {}'.format(math.sqrt(mean_squared_error(prediction, lables))))     # 改成math因为加载比np快一点
 
 
+def fillna_with_popular(df, col):
+    df[col] = df[col].fillna(df[col].mode()[0])
 
 if __name__ == '__main__':
     import pandas as pd

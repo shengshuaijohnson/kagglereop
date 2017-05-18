@@ -182,8 +182,9 @@ conditions = set([x for x in features['Condition1']] + [x for x in features['Con
 dummies = pd.DataFrame(
     data=np.zeros((len(features.index), len(conditions))),          # np.zeros 创建相应行数和列数的ndarray 0矩阵
     index=features.index, columns=conditions)
+print conditions
 # 有np.zeros，应该也有相应的创建单位矩阵方法吧？
-
+print abc
 for i, cond in enumerate(zip(features['Condition1'], features['Condition2'])):      # 由于有两列，所以直接用get dummies比较麻烦，采取手动完成,非要用的话可能要分别取然后对相应元素做或操作 or相加再缩小什么的
     dummies.ix[i, cond] = 1                 # 索引时带个tuple是什么鬼？是对两个值都赋1？
     # if cond[0] == 'Norm' and cond[1] != 'Norm':
