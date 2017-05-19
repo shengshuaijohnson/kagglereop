@@ -29,6 +29,7 @@ from sklearn.utils import shuffle       # 这几行import都好妖路。。。�
 
 train = pd.read_csv('train.csv')
 test   = pd.read_csv('test.csv')
+
 # print train.shape
 # print test.shape
 # test.columns.values[-1] = '123'
