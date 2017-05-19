@@ -37,12 +37,14 @@ df_train = pd.read_csv('train.csv')
 # ...... scatter plots instead of boxplots, which are more suitable for categorical variables visualization. The way we visualize data often influences our conclusions.
 # 注意散点图和箱型图的用法和区别，主要是箱型图以前比较少见 ，参考 http://www.statisticshowto.com/how-to-read-a-box-plot/
 # 这里的图形与上述网站的说法好像有所不同，因为最顶端的线不是最大值，而线外面还有若干点，也是有效数据（这些点好像是经判断为异常值？？）
-# var = 'OverallQual'
-# data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
-# f, ax = plt.subplots(figsize=(8, 6))
-# fig = sns.boxplot(x=var, y="SalePrice", data=data)
-# fig.axis(ymin=0, ymax=800000);
-# print df_train[df_train['OverallQual']==7]['SalePrice']
+# 异常值的判定规则： whis 默认为1.5时，可参照https://sanwen8.cn/p/11bqgOb.html ，也就是说box是固定的，whis影响内外限范围取值。
+# 之前的网站没仔细读，就留了个URL，仔细读之后好像的确如此，whis即whisker
+var = 'OverallQual'
+data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
+f, ax = plt.subplots(figsize=(8, 6))
+fig = sns.boxplot(x=var, y="SalePrice", data=data)
+fig.axis(ymin=0, ymax=800000);
+print df_train[df_train['OverallQual']==7]['SalePrice']
 
 
 corrmat = df_train.corr()
