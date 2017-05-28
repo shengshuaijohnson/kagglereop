@@ -40,21 +40,23 @@ df_train = pd.read_csv('train.csv')
 # 异常值的判定规则： whis 默认为1.5时，可参照https://sanwen8.cn/p/11bqgOb.html ，也就是说box是固定的，whis影响内外限范围取值。
 # 之前的网站没仔细读，就留了个URL，仔细读之后好像的确如此，whis即whisker
 
-var = 'OverallQual'
-data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
-f, ax = plt.subplots(figsize=(8, 6))
-fig = sns.boxplot(x=var, y="SalePrice", data=data)
-fig.axis(ymin=0, ymax=800000);
-print df_train[df_train['OverallQual']==7]['SalePrice']
 
+def get_boxplot(var='OverallQual', figsize=(8, 6)):
+    data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
+    f, ax = plt.subplots(figsize=figsize)
+    fig = sns.boxplot(x=var, y="SalePrice", data=data, whis=1.5)
+    fig.axis(ymin=0, ymax=800000);
+# print df_train[df_train['OverallQual']==7]['SalePrice']
+# 封装好后查看其它feature如可以发现有时会有很多‘异常值’产生，思考：异常值较多的case（尤其是不设定X的情况）与较少的case相比较的含义？
 
 # 2. First things first: analysing 'SalePrice'
 # print df_train['SalePrice'].describe()      # hin强大的函数！注意The output DataFrame index depends on the requested dtypes:
 # 对于数值型，返回count，平均数，标准差，最大最小，四分位的值
 
-sns.distplot(df_train['SalePrice'])     # 常见的distplot绘制分布情况（单因子）
+# sns.distplot(df_train['SalePrice'])     # 常见的distplot绘制分布情况（单因子）
 print("Skewness: %f" % df_train['SalePrice'].skew())
 print("Kurtosis: %f" % df_train['SalePrice'].kurt())
+
 
 # important！！！看图后得出的结论： 1.Deviate from the normal distribution 2.Have appreciable positive skewness. 3.Show peakedness.
 # 以前看这种图都没什么特别的感想，这次有角度可以参考一下
@@ -65,25 +67,54 @@ print("Kurtosis: %f" % df_train['SalePrice'].kurt())
 
 # 了解完价格本身后了解相关feature
 
-var = 'GrLivArea'   # GrLivArea: Above grade (ground) living area square feet
-data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
-data.plot.scatter(x=var, y='SalePrice', ylim=(0,800000));
+def get_scatterplot(var='GrLivArea'):   # GrLivArea: Above grade (ground) living area square feet
+    data = pd.concat([df_train['SalePrice'], df_train[var]], axis=1)
+    data.plot.scatter(x=var, y='SalePrice', ylim=(0,800000))
+    # 散点图评价方法：X-Y关系接近线性，说明相关性强；对于TotalBsmtSF也比较像线性，但是可以看出几个强烈的不相关点，balabala
+    # 另一个极端的case就是YrSold，明显相关性不强
+# get_scatterplot('TotalBsmtSF')
+
+
+# get_boxplot('OverallQual')      # OverallQual: Rates the overall material and finish of the house
+# 一方面看异常值多不多，一方面看box的位置，可以看出价格随着OverallQual是稳步上升的，当然data desc已经说是材料估值评级之类的概念了
+# 如何看图很重要！！很长一段时间内对这图没什么感想！带失误！！！
+# get_boxplot('YearBuilt')    # 与制造年份相关性较低，略有正相关的趋势
+
+'''
+Summary:
+'GrLivArea' and 'TotalBsmtSF' seem to be linearly related with 'SalePrice'. Both relationships are positive, which means that as one variable increases, the other also increases. In the case of 'TotalBsmtSF', we can see that the slope of the linear relationship is particularly high.
+'OverallQual' and 'YearBuilt' also seem to be related with 'SalePrice'. The relationship seems to be stronger in the case of 'OverallQual', where the box plot shows how sales prices increase with the overall quality.
+
+We just analysed four variables, but there are many other that we should analyse. The trick here seems to be the choice of the right features (feature selection) and not the definition of complex relationships between them (feature engineering).
+That said, let's separate the wheat from the chaff.
+
+'''
+# 注意 feature election和feature engineering的区别！
+
+
+# 3. Keep calm and work smart¶
 
 
 
 
 
 
-corrmat = df_train.corr()
-f, ax = plt.subplots(figsize=(12, 9))
-sns.heatmap(corrmat, vmax=.8, square=True);
+
+
+
+
+
+
+# corrmat = df_train.corr()
+# f, ax = plt.subplots(figsize=(12, 9))
+# sns.heatmap(corrmat, vmax=.8, square=True);
 
 #saleprice correlation matrix
-k = 10 #number of variables for heatmap
-cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
-cm = np.corrcoef(df_train[cols].values.T)
-sns.set(font_scale=1.25)
-hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+# k = 10 #number of variables for heatmap
+# cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
+# cm = np.corrcoef(df_train[cols].values.T)
+# sns.set(font_scale=1.25)
+# hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 
 
 # heatmap我曹！看起来屌屌的!
