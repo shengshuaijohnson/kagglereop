@@ -78,8 +78,7 @@ def get_scatterplot(var='GrLivArea'):   # GrLivArea: Above grade (ground) living
 # get_boxplot('OverallQual')      # OverallQual: Rates the overall material and finish of the house
 # 一方面看异常值多不多，一方面看box的位置，可以看出价格随着OverallQual是稳步上升的，当然data desc已经说是材料估值评级之类的概念了
 # 如何看图很重要！！很长一段时间内对这图没什么感想！带失误！！！
-# get_boxplot('YearBuilt')    # 与制造年份相关性较低，略有正相关的趋势
-
+# get_boxplot('YearBuilt')    # 与制造年份相关性较低，略有正相关的趋势,看不清年份的话用xtick 设置rotation
 '''
 Summary:
 'GrLivArea' and 'TotalBsmtSF' seem to be linearly related with 'SalePrice'. Both relationships are positive, which means that as one variable increases, the other also increases. In the case of 'TotalBsmtSF', we can see that the slope of the linear relationship is particularly high.
@@ -92,22 +91,45 @@ That said, let's separate the wheat from the chaff.
 # 注意 feature election和feature engineering的区别！
 
 
-# 3. Keep calm and work smart¶
+# 3. Keep calm and work smart     Let's overcome inertia and do a more objective analysis.
+
+# To explore the universe, we will start with some practical recipes to make sense of our 'plasma soup':
+# Correlation matrix (heatmap style).
+# 'SalePrice' correlation matrix (zoomed heatmap style).
+# Scatter plots between the most correlated variables (move like Jagger style).
+
+# 开始进行定量分析与矩阵的学习, 重点学习heatmap的使用！
+
+#correlation matrix
+corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
+
+f, ax = plt.subplots(figsize=(12, 8))
+sns.heatmap(corrmat, vmax=.8, square=True)
+# 相关性的模式(系数)有三种：
+# pearson : standard correlation coefficient 默认模式   https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
+# kendall : Kendall Tau correlation coefficient   https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
+# spearman : Spearman rank correlation       https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient
+# 深入看各种统计方式的话好复杂=。= 先大概看一下默认的pearson
+
+# Pearson correlation coefficient：用来衡量线性相关度，（相较之下，spearman则是衡量单调关系，未必要线性）在-1~+1之间，正负号代表正相关或负相关，绝对值越接近1代表线性吻合度越高，为0时则是杂乱无规律 
+# 计算方式是协方差（X,Y）/标准差(X)*标准差(Y)
 
 
 
+# This function tries to infer a good colormap to use from the data, but this is not guaranteed to work, so take care to make sure the kind of colormap (sequential or diverging) and its limits are appropriate.
+# 关于tick label方向的问题： https://stackoverflow.com/questions/27037241/changing-the-rotation-of-tick-labels-in-seaborn-heatmap
+plt.yticks(rotation=0) 
+plt.xticks(rotation=-90)
+# print  help(sns.heatmap)
+
+'''
+HEAT MAP:
+
+
+'''
 
 
 
-
-
-
-
-
-
-# corrmat = df_train.corr()
-# f, ax = plt.subplots(figsize=(12, 9))
-# sns.heatmap(corrmat, vmax=.8, square=True);
 
 #saleprice correlation matrix
 # k = 10 #number of variables for heatmap
