@@ -101,10 +101,15 @@ That said, let's separate the wheat from the chaff.
 # 开始进行定量分析与矩阵的学习, 重点学习heatmap的使用！
 
 #correlation matrix
-corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
 
-f, ax = plt.subplots(figsize=(12, 8))
-sns.heatmap(corrmat, vmax=.8, square=True)
+corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
+# f, ax = plt.subplots(figsize=(12, 8))
+# sns.heatmap(corrmat, vmax=0.8, square=True)
+# corrmat.sort(columns=['SalePrice'], inplace=True)
+# print corrmat['SalePrice']
+# 通过上面这两行排序后看也是可以的，图片可能更明显点
+
+# 与Saleprice 之间颜色最深的是Overall
 # 相关性的模式(系数)有三种：
 # pearson : standard correlation coefficient 默认模式   https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
 # kendall : Kendall Tau correlation coefficient   https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
@@ -114,38 +119,46 @@ sns.heatmap(corrmat, vmax=.8, square=True)
 # Pearson correlation coefficient：用来衡量线性相关度，（相较之下，spearman则是衡量单调关系，未必要线性）在-1~+1之间，正负号代表正相关或负相关，绝对值越接近1代表线性吻合度越高，为0时则是杂乱无规律 
 # 计算方式是协方差（X,Y）/标准差(X)*标准差(Y)
 
-
-
 # This function tries to infer a good colormap to use from the data, but this is not guaranteed to work, so take care to make sure the kind of colormap (sequential or diverging) and its limits are appropriate.
 # 关于tick label方向的问题： https://stackoverflow.com/questions/27037241/changing-the-rotation-of-tick-labels-in-seaborn-heatmap
-plt.yticks(rotation=0) 
-plt.xticks(rotation=-90)
-# print  help(sns.heatmap)
+
+
+
 
 '''
 HEAT MAP:
-
-
+wiki   https://en.wikipedia.org/wiki/Heat_map
+事实上这里比较关键的是corr函数，算出矩阵后放到heatmap的过程反而比较简便，当然heatmap也有各种复杂情况拓展应用。
+上面的作图法只显示颜色（下面那个显示数值），对色盲还是有一定程度的不友好的，而且颜色我赶脚也不是很精确。
+另实测即使数据整体乘一个大系数，图片仍然不变，因此应该是内置了类似归一化的计算
+vmax和vmin影响颜色，虽然help里描述不多，但应该是上下限。  （数值越大颜色越浅, not sure）
+square 参数为True保持小方格是正方形
+看heatmap的方法除了上述的光看一下与价格相关的行列，还可以看除了对角线外其他深色格子，如'TotalBsmtSF'和'1stFlrSF' 接近黑色
+注意这句：Actually, this correlation is so strong that it can indicate a situation of multicollinearity.
+multicollinearity 多重共线性 ： multicollinearity (also collinearity) is a phenomenon in which two or more predictor variables in a multiple regression model are highly correlated, meaning that one can be linearly predicted from the others with a substantial degree of accuracy. 
+In this situation the coefficient estimates of the multiple regression may change erratically in response to small changes in the model or the data.
+关于多重共线性导致的结果，可以有更进一步的理解。
 '''
 
 
 
 
 #saleprice correlation matrix
-# k = 10 #number of variables for heatmap
-# cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
-# cm = np.corrcoef(df_train[cols].values.T)
-# sns.set(font_scale=1.25)
-# hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+k = 10 #number of variables for heatmap
+cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index # get the rows of a DataFrame sorted by the `n` largest
+# 返回的结果也已经排好序了
+cm = np.corrcoef(df_train[cols].values.T)
+# cm = np.corrcoef(df_train[cols].values, rawvar=0)
+
+# corrcoef :Return Pearson product-moment correlation coefficients  (as ndarray)
+# 注意这里之所以要转置，是因为原来的shape 为(1460,10),rowvar默认为1是根据行为变量算的，返回1460*1460的结果，耗时长，结果也无意义
+# 可以选择转置，也可以选择设置rowvar为0,得到10*10的正确结果
+sns.set(font_scale=1.25)
+hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+# 传入了许多参数的heatmap。。。
 
 
 # heatmap我曹！看起来屌屌的!
-
-
-
-
-
-
-
+plt.yticks(rotation=0) 
+plt.xticks(rotation=-90)
 sns.plt.show()
-
