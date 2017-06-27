@@ -78,7 +78,8 @@ def get_scatterplot(var='GrLivArea'):   # GrLivArea: Above grade (ground) living
 # get_boxplot('OverallQual')      # OverallQual: Rates the overall material and finish of the house
 # 一方面看异常值多不多，一方面看box的位置，可以看出价格随着OverallQual是稳步上升的，当然data desc已经说是材料估值评级之类的概念了
 # 如何看图很重要！！很长一段时间内对这图没什么感想！带失误！！！
-# get_boxplot('YearBuilt')    # 与制造年份相关性较低，略有正相关的趋势,看不清年份的话用xtick 设置rotation
+
+# get_boxplot('YearBuilt',)    # 与制造年份相关性较低，略有正相关的趋势,看不清年份的话用xtick 设置rotation
 '''
 Summary:
 'GrLivArea' and 'TotalBsmtSF' seem to be linearly related with 'SalePrice'. Both relationships are positive, which means that as one variable increases, the other also increases. In the case of 'TotalBsmtSF', we can see that the slope of the linear relationship is particularly high.
@@ -154,11 +155,23 @@ cm = np.corrcoef(df_train[cols].values.T)
 # 注意这里之所以要转置，是因为原来的shape 为(1460,10),rowvar默认为1是根据行为变量算的，返回1460*1460的结果，耗时长，结果也无意义
 # 可以选择转置，也可以选择设置rowvar为0,得到10*10的正确结果
 sns.set(font_scale=1.25)
-hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
-# 传入了许多参数的heatmap。。。
-
+# hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+# 传入了许多参数的heatmap。。。  annot 影响格子里是否有数字
+# 记得生成图之后要浏览一下这前10的feature！
 
 # heatmap我曹！看起来屌屌的!
-plt.yticks(rotation=0) 
+
+
+
+# 下面开始生成散点图对
+sns.set()       # help里是Set aesthetic parameters in one step.
+
+cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
+sns.pairplot(df_train[cols], size = 1.5)            # pairplot,传入N组数据自动扩展成N * N个散点图，要生成半天速度好慢，图太J2多了点
+
+
+# 选取相关性最高的几个
+
+plt.yticks(rotation=0)      # 这里控制坐标轴标签反转！
 plt.xticks(rotation=-90)
 sns.plt.show()
