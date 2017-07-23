@@ -106,8 +106,9 @@ That said, let's separate the wheat from the chaff.
 corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
 # f, ax = plt.subplots(figsize=(12, 8))
 # sns.heatmap(corrmat, vmax=0.8, square=True)
-# corrmat.sort(columns=['SalePrice'], inplace=True)
+corrmat.sort(columns=['SalePrice'], inplace=True)
 # print corrmat['SalePrice']
+# print df_train.columns
 # 通过上面这两行排序后看也是可以的，图片可能更明显点
 
 # 与Saleprice 之间颜色最深的是Overall
@@ -166,12 +167,32 @@ sns.set(font_scale=1.25)
 # 下面开始生成散点图对
 sns.set()       # help里是Set aesthetic parameters in one step.
 
-cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
-sns.pairplot(df_train[cols], size = 1.5)            # pairplot,传入N组数据自动扩展成N * N个散点图，要生成半天速度好慢，图太J2多了点
-
-
 # 选取相关性最高的几个
+# cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
+# sns.pairplot(df_train[cols], size = 1)            # pairplot,传入N组数据自动扩展成N * N个散点图，要生成半天速度好慢，图太J2多了点
+# 如果横纵一样就变成柱状图？统计分布？
+# 对散点图的观察：'TotalBsmtSF' and 'GrLiveArea几乎线性，可以认为这两个feature差不多？
+# yearBuilt和房价的关系，上下边界像指数？？我怎么感觉不太像。。。（主要是下边界）
 
+# Ok, enough of Rorschach test for now. Let's move forward to what's missing: missing data!
+# 处理空数据时注意的问题：
+# How prevalent is the missing data?
+# Is missing data random or does it have a pattern?
+total = df_train.isnull().sum().sort_values(ascending=False)    # ascending代表升序
+# isnull返回的是和原矩阵同shape的布尔矩阵，每个cell为True，False，sum之后才会变成数字
+percent = (df_train.isnull().sum()/df_train.isnull().count()).sort_values(ascending=False)
+# 归一化这种基本操作我还是不溜！基本都只能copy
+# 注意分母的计算，分母就是全都为1460（行数）的向量，这个百分比是为了计算某一栏里有多少为空，而不是计算某
+percent = (total / total.sum()).sort_values(ascending=False).sort_values(ascending=False)
+missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
+
+# print percent.head(20)
+# 较高的都可以删了(话说是不是因为有空数据，poolQC这些没在corrmat里反映出来？)
+# GarageX和BsmtX系列参数有同样的missing data！妈的自己看的时候太匆忙了随便扫了一眼没注意！即使注意到了也没有引发相应思考！不够专业！
+# In summary, to handle missing data, we'll delete all the variables with missing data, except the variable 'Electrical'. In 'Electrical' we'll just delete the observation with missing data.
+# df_train = df_train.drop((missing_data[missing_data['Total'] > 1]).index, 1)    # 关于axis的参数设置总是有点迷，主要help里写的int or name
+# df_train = df_train.drop(df_train.loc[df_train['Electrical'].isnull()].index)   # 不设axis就是按行丢了，数据量比较小所以丢掉这唯一一行。 从v？“”“”“”“”“
+# df_train.isnull().sum().max()
 plt.yticks(rotation=0)      # 这里控制坐标轴标签反转！
 plt.xticks(rotation=-90)
 sns.plt.show()
