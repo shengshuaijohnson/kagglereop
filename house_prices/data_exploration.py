@@ -15,12 +15,11 @@ from scipy.stats import norm
 from sklearn.preprocessing import StandardScaler        # 标准化工具，注意用法，赶脚很实用！
 from scipy import stats                     # library of statistical functions
 
-# import warnings
-# warnings.filterwarnings('ignore')
+import warnings
+warnings.filterwarnings('ignore')
 
 df_train = pd.read_csv('train.csv')
 
-# print df_train.columns
 
 
 # In order to have some discipline in our analysis, we can create an Excel spreadsheet with the following columns:
@@ -103,11 +102,11 @@ That said, let's separate the wheat from the chaff.
 
 #correlation matrix
 
-corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
+# corrmat = df_train.corr()   # 注意此处是先计算相关性，然后用相关矩阵做heatmap
 # f, ax = plt.subplots(figsize=(12, 8))
 # sns.heatmap(corrmat, vmax=0.8, square=True)
-corrmat.sort(columns=['SalePrice'], inplace=True)
-# print corrmat['SalePrice']
+# corrmat.sort(columns=['SalePrice'], inplace=True)
+# print corrmat
 # print df_train.columns
 # 通过上面这两行排序后看也是可以的，图片可能更明显点
 
@@ -147,9 +146,9 @@ In this situation the coefficient estimates of the multiple regression may chang
 
 #saleprice correlation matrix
 k = 10 #number of variables for heatmap
-cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index # get the rows of a DataFrame sorted by the `n` largest
+# cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index # get the rows of a DataFrame sorted by the `n` largest
 # 返回的结果也已经排好序了
-cm = np.corrcoef(df_train[cols].values.T)
+# cm = np.corrcoef(df_train[cols].values.T)
 # cm = np.corrcoef(df_train[cols].values, rawvar=0)
 
 # corrcoef :Return Pearson product-moment correlation coefficients  (as ndarray)
@@ -174,25 +173,52 @@ sns.set()       # help里是Set aesthetic parameters in one step.
 # 对散点图的观察：'TotalBsmtSF' and 'GrLiveArea几乎线性，可以认为这两个feature差不多？
 # yearBuilt和房价的关系，上下边界像指数？？我怎么感觉不太像。。。（主要是下边界）
 
+
+
 # Ok, enough of Rorschach test for now. Let's move forward to what's missing: missing data!
 # 处理空数据时注意的问题：
 # How prevalent is the missing data?
 # Is missing data random or does it have a pattern?
+# （中药！） Moreover, from a substantive perspective, we need to ensure that the missing data process is not biased and hidding an inconvenient truth.
 total = df_train.isnull().sum().sort_values(ascending=False)    # ascending代表升序
+
 # isnull返回的是和原矩阵同shape的布尔矩阵，每个cell为True，False，sum之后才会变成数字
 percent = (df_train.isnull().sum()/df_train.isnull().count()).sort_values(ascending=False)
+# print percent
+# print percent
 # 归一化这种基本操作我还是不溜！基本都只能copy
-# 注意分母的计算，分母就是全都为1460（行数）的向量，这个百分比是为了计算某一栏里有多少为空，而不是计算某
-percent = (total / total.sum()).sort_values(ascending=False).sort_values(ascending=False)
+# 注意分母的计算，分母就是全都为1460（行数）的向量，这个百分比是为了计算某一栏里有多少为空，而不是计算某栏空数据总总共的多少
+# percent = (df_train.isnull().sum().sort_values(ascending=False) / df_train.isnull().count())
+# 上面这条假如分子里放sort的话，分母作为向量和作为数值得到的结果好像会不一样。。。好乱我靠！不管了！
 missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
-
-# print percent.head(20)
+# print percent
+# print missing_data.head(20)
+# sns.countplot(percent)
 # 较高的都可以删了(话说是不是因为有空数据，poolQC这些没在corrmat里反映出来？)
 # GarageX和BsmtX系列参数有同样的missing data！妈的自己看的时候太匆忙了随便扫了一眼没注意！即使注意到了也没有引发相应思考！不够专业！
 # In summary, to handle missing data, we'll delete all the variables with missing data, except the variable 'Electrical'. In 'Electrical' we'll just delete the observation with missing data.
-# df_train = df_train.drop((missing_data[missing_data['Total'] > 1]).index, 1)    # 关于axis的参数设置总是有点迷，主要help里写的int or name
-# df_train = df_train.drop(df_train.loc[df_train['Electrical'].isnull()].index)   # 不设axis就是按行丢了，数据量比较小所以丢掉这唯一一行。 从v？“”“”“”“”“
-# df_train.isnull().sum().max()
+df_train = df_train.drop((missing_data[missing_data['Total'] > 1]).index, 1)    # 关于axis的参数设置总是有点迷，主要help里写的int or name
+df_train = df_train.drop(df_train.loc[df_train['Electrical'].isnull()].index)   # 不设axis就是按行丢了，数据量比较小所以丢掉这唯一一行。
+# print df_train.isnull().sum().max() == 0# 这里的sum其实有点count的作用。。
+
+# ======
+# Outliers quick view
+#In this context, data standardization means converting data values to have mean of 0 and a standard deviation of 1.
+# 话说standardlize和量子力学的normalize要分清楚= =
+print df_train['SalePrice'][:,np.newaxis]
+
+saleprice_scaled = StandardScaler().fit_transform(df_train['SalePrice'][:,np.newaxis])  # 是个ndarray
+low_range = saleprice_scaled[saleprice_scaled[:,0].argsort()][:10]
+high_range= saleprice_scaled[saleprice_scaled[:,0].argsort()][-10:]
+# print('outer range (low) of the distribution:')
+# print(low_range)
+# print('\nouter range (high) of the distribution:')
+# print(high_range)
+# 太牛批了吧这个。。  http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html
+# fit_transform(X[, y]) Fit to data, then transform it.
+# np.newaxis是用来改变矩阵形状的技巧！横过来变成一行好多列的ndarray了
+
+
 plt.yticks(rotation=0)      # 这里控制坐标轴标签反转！
 plt.xticks(rotation=-90)
-sns.plt.show()
+# sns.plt.show()
